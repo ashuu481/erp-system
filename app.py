@@ -43,7 +43,7 @@ def login():
         else:
             error = "Invalid Username or Password"
 
-    return render_template("login.html", error=error)
+    return render_template("login.html", error=None)
 
 # ---------------- LOGOUT ----------------
 @app.route('/logout')
