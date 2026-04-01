@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Activity Log</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial;
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+table {
+    width: 100%;
+    margin-top: 15px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #1e293b;
+}
+
+tr:nth-child(even) {
+    background: #1e293b;
+}
+</style>
+
+</head>
+<body>
+
+<div style="background:#020617; padding:10px 20px; display:flex; justify-content:space-between;">
+    <div>🚀 ERP System</div>
+    <div>👤 {{ session['user'] }}</div>
+</div>
+
+<div class="container">
+
+<h2>📜 Activity Log</h2>
+
+<a href="/dashboard">⬅ Back</a>
+
+<table>
+{% for row in data %}
+<tr>
+    {% for cell in row %}
+    <td>{{ cell }}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+</div>
+</body>
+</html>

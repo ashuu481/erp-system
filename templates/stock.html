@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stock</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial;
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+input {
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+}
+
+button {
+    background: #38bdf8;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #1e293b;
+}
+
+tr:nth-child(even) {
+    background: #1e293b;
+}
+
+tr:hover {
+    background: #334155;
+}
+</style>
+
+</head>
+<body>
+
+<div style="background:#020617; padding:10px 20px; display:flex; justify-content:space-between;">
+    <div>🚀 ERP System</div>
+    <div>👤 {{ session['user'] }}</div>
+</div>
+
+<div class="container">
+
+<h2>📦 Stock</h2>
+
+<a href="/dashboard">⬅ Back</a>
+
+<form method="GET">
+    <input name="part_no" placeholder="🔍 Search Part No">
+    
+    <div>
+        <button type="submit">Search</button>
+        <a href="/export?part_no={{ request.args.get('part_no','') }}">
+            <button type="button">Export</button>
+        </a>
+    </div>
+</form>
+
+{% if data|length == 0 %}
+<div style="text-align:center; margin-top:20px; color:#94a3b8;">
+    📭 No data found
+</div>
+{% endif %}
+
+<table>
+{% for row in data %}
+<tr>
+    {% for cell in row %}
+    <td>{{ cell }}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+<div style="text-align:center; margin-top:20px; color:gray;">
+    © ERP System 😎
+</div>
+
+</div>
+</body>
+</html>

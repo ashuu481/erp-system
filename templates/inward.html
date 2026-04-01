@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Inward</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial;
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+input {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 6px;
+    border: none;
+}
+
+button {
+    background: #38bdf8;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    margin-top: 15px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #1e293b;
+}
+
+tr:nth-child(even) {
+    background: #1e293b;
+}
+</style>
+
+</head>
+<body>
+
+<div style="background:#020617; padding:10px 20px; display:flex; justify-content:space-between;">
+    <div>🚀 ERP System</div>
+    <div>👤 {{ session['user'] }}</div>
+</div>
+
+<div class="container">
+
+<h2>📥 Inward Entry</h2>
+
+<a href="/dashboard">⬅ Back</a>
+
+<form method="POST" action="/add_inward">
+    <input name="part_no" placeholder="Part No">
+    <input name="description" placeholder="Description">
+    <input name="qty_in" placeholder="Qty In">
+    <input name="qty_out" placeholder="Qty Out">
+    <input name="rejection" placeholder="Rejection">
+    <button type="submit">Add</button>
+</form>
+
+<table>
+{% for row in data %}
+<tr>
+    {% for cell in row %}
+    <td>{{ cell }}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+<div style="text-align:center; margin-top:20px; color:gray;">
+    © ERP System 😎
+</div>
+
+</div>
+</body>
+</html>
