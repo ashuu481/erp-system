@@ -2,17 +2,65 @@
 <html>
 <head>
 <title>Invoice</title>
+
+<style>
+body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+}
+
+input {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 6px;
+    border: none;
+}
+
+button {
+    padding: 10px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+</style>
+
+<script>
+function addRow() {
+    let div = document.getElementById("items");
+    let row = `
+    <div>
+        <input name="part[]" placeholder="Part">
+        <input name="qty[]" type="number" placeholder="Qty">
+        <input name="rate[]" type="number" placeholder="Rate">
+    </div>`;
+    div.insertAdjacentHTML('beforeend', row);
+}
+</script>
+
 </head>
 <body>
 
-<h2>Generate Invoice</h2>
+<h2>🧾 Generate Invoice</h2>
 
 <form method="POST" action="/generate_invoice">
-    <input name="customer" placeholder="Customer Name"><br>
-    <input name="part" placeholder="Part"><br>
-    <input name="qty" placeholder="Quantity"><br>
-    <input name="rate" placeholder="Rate"><br>
-    <button type="submit">Generate</button>
+
+    <input name="customer" placeholder="Customer Name" required><br>
+
+    <div id="items">
+        <div>
+            <input name="part[]" placeholder="Part">
+            <input name="qty[]" type="number" placeholder="Qty">
+            <input name="rate[]" type="number" placeholder="Rate">
+        </div>
+    </div>
+
+    <button type="button" onclick="addRow()">➕ Add Item</button><br><br>
+
+    <button type="submit">Generate Invoice</button>
+
 </form>
 
 </body>

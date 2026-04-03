@@ -16,68 +16,77 @@ def generate_invoice():
     styles = getSampleStyleSheet()
 
     customer = request.form['customer']
-    part = request.form['part']
-    qty = int(request.form['qty'])
-    rate = float(request.form['rate'])
+    parts = request.form.getlist('part[]')
+    qtys = request.form.getlist('qty[]')
+    rates = request.form.getlist('rate[]')
 
-    total = qty * rate
-    gst = total * 0.18
-    final = total + gst
-
-    file_path = "invoice.pdf"
-    doc = SimpleDocTemplate(file_path)
-
+    doc = SimpleDocTemplate("invoice.pdf")
     content = []
 
     # 🔥 HEADER
     content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
-    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4", styles['Normal']))
-    content.append(Paragraph("State Code : 27 Maharashtra", styles['Normal']))
+    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4 | State Code : 27 Maharashtra", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # 🔥 INVOICE INFO TABLE
-    invoice_info = [
+    # 🔥 INVOICE INFO (TOP BOX LIKE IMAGE)
+    info_data = [
         ["Invoice No:", "RPG/B/0010/26-27", "Date:", datetime.now().strftime("%d-%b-%Y")],
         ["P.O No:", "18040009076", "Payment Terms:", "30 Days"]
     ]
 
-    table1 = Table(invoice_info, colWidths=[80, 150, 80, 150])
-    table1.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black)
+    info_table = Table(info_data, colWidths=[80, 150, 80, 150])
+    info_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
     ]))
-
-    content.append(table1)
+    content.append(info_table)
     content.append(Spacer(1, 10))
 
-    # 🔥 BUYER & CONSIGNEE
-    buyer_data = [
+    # 🔥 BUYER + CONSIGNEE SIDE BY SIDE
+    buyer = [
         ["Buyer:", customer],
         ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"]
+        ["GSTIN:", "27AAACF3125C1Z9"],
+        ["State:", "Maharashtra"]
     ]
 
-    consignee_data = [
+    consignee = [
         ["Consignee:", customer],
         ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"]
+        ["GSTIN:", "27AAACF3125C1Z9"],
+        ["State:", "Maharashtra"]
     ]
 
-    buyer_table = Table(buyer_data)
-    consignee_table = Table(consignee_data)
+    buyer_table = Table(buyer)
+    consignee_table = Table(consignee)
 
     buyer_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
     consignee_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
 
-    content.append(buyer_table)
-    content.append(Spacer(1, 10))
-    content.append(consignee_table)
+    side_by_side = Table([[buyer_table, consignee_table]])
+    content.append(side_by_side)
     content.append(Spacer(1, 10))
 
-    # 🔥 MAIN TABLE
-    table_data = [
-        ["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"],
-        ["1", part, "87089900", "18%", qty, rate, total]
-    ]
+    # 🔥 MAIN ITEM TABLE (MULTI ROW)
+    table_data = [["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"]]
+
+    total = 0
+
+    for i in range(len(parts)):
+        if parts[i]:
+            q = float(qtys[i])
+            r = float(rates[i])
+            amt = q * r
+            total += amt
+
+            table_data.append([
+                str(i+1),
+                parts[i],
+                "87089900",
+                "18%",
+                q,
+                r,
+                amt
+            ])
 
     table = Table(table_data, colWidths=[40, 150, 80, 60, 60, 60, 80])
 
@@ -91,30 +100,34 @@ def generate_invoice():
     content.append(table)
     content.append(Spacer(1, 15))
 
-    # 🔥 GST BREAKUP
-    gst_table = [
+    # 🔥 GST + TOTAL SECTION (LIKE IMAGE RIGHT SIDE)
+    cgst = total * 0.09
+    sgst = total * 0.09
+    grand = total + cgst + sgst
+
+    totals = [
         ["Subtotal", total],
-        ["CGST 9%", total*0.09],
-        ["SGST 9%", total*0.09],
-        ["Total", final]
+        ["CGST 9%", cgst],
+        ["SGST 9%", sgst],
+        ["Grand Total", grand]
     ]
 
-    gst_table = Table(gst_table, colWidths=[200, 100])
-    gst_table.setStyle(TableStyle([
+    total_table = Table(totals, colWidths=[200, 120])
+    total_table.setStyle(TableStyle([
         ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
-    content.append(gst_table)
+    content.append(total_table)
     content.append(Spacer(1, 20))
 
-    # 🔥 FOOTER
+    # 🔥 FOOTER (SIGN)
     content.append(Paragraph("For Radiance Polymers", styles['Normal']))
     content.append(Spacer(1, 30))
     content.append(Paragraph("Authorized Signatory", styles['Normal']))
 
     doc.build(content)
 
-    return send_file(file_path, as_attachment=True)
+    return send_file("invoice.pdf", as_attachment=True)
 @app.route('/invoice')
 def invoice():
     if 'user' not in session:
