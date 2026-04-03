@@ -1,12 +1,47 @@
 from flask import Flask, render_template, request, redirect, session, send_file
 import pandas as pd
 import io
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 app = Flask(__name__)
 app.secret_key = "erp_secret"
+@app.route('/generate_invoice', methods=['POST'])
+def generate_invoice():
+    customer = request.form['customer']
+    part = request.form['part']
+    qty = int(request.form['qty'])
+    rate = int(request.form['rate'])
 
+    total = qty * rate
+    gst = total * 0.18
+    final = total + gst
+
+    file_path = "invoice.pdf"
+
+    doc = SimpleDocTemplate(file_path)
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(Paragraph(f"Customer: {customer}", styles['Normal']))
+    content.append(Paragraph(f"Part: {part}", styles['Normal']))
+    content.append(Paragraph(f"Qty: {qty}", styles['Normal']))
+    content.append(Paragraph(f"Rate: {rate}", styles['Normal']))
+    content.append(Paragraph(f"Total: {total}", styles['Normal']))
+    content.append(Paragraph(f"GST (18%): {gst}", styles['Normal']))
+    content.append(Paragraph(f"Final: {final}", styles['Normal']))
+
+    doc.build(content)
+
+    return send_file(file_path, as_attachment=True)
 FILE = "parts.xlsx.xlsm"
-
+@app.route('/invoice')
+def invoice():
+    if 'user' not in session:
+        return redirect('/login')
+    return render_template("invoice.html")
 
 # ---------------- AUTO SHEET DETECT ----------------
 def get_sheet():
