@@ -29,8 +29,7 @@ def generate_invoice():
 
     # 🔥 INVOICE NO + FILE
     invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
-    file_name = f"{invoice_no}.pdf"
-
+    file_name = f"static/invoices/{invoice_no}.pdf"
     doc = SimpleDocTemplate(file_name)
     content = []
 
@@ -174,7 +173,7 @@ def invoice_history():
     data = df.fillna("").values.tolist()
 
     return render_template("invoice_history.html", data=data)
-@app.route('/download/<filename>')
+@app.route('/download/<path:filename>')
 def download(filename):
     return send_file(filename, as_attachment=True)
 # ---------------- AUTO SHEET DETECT ----------------
