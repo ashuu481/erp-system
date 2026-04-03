@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 
-from flask import Flask, render_template, request, redirect, session, send_file
+from flask import Flask, render_template, request, redirect, send_from_directory, session, send_file
 import pandas as pd
 import io
 
@@ -159,7 +159,13 @@ def generate_invoice():
 
     df.to_excel(file_path_excel, index=False)
 
-    return send_file(file_name, as_attachment=True)
+    from flask import send_from_directory
+
+    return send_from_directory(
+    "static/invoices",
+    f"{invoice_no}.pdf",
+    as_attachment=True
+)
 
 @app.route('/invoice')
 def invoice():
