@@ -49,8 +49,6 @@ def generate_invoice():
     qtys = request.form.getlist('qty[]')
     rates = request.form.getlist('rate[]')
 
-  
-
     # 🔥 AUTO INVOICE NUMBER
     invoice_no = get_next_invoice_no()
 
