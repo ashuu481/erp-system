@@ -123,7 +123,7 @@ body {
 
 <script>
 const canvas = document.getElementById('myChart');
-let data = JSON.parse(canvas.getAttribute('data-chart') || "[]");
+let data = JSON.parse('{{ chart_data | tojson | safe }}');
 
 new Chart(canvas, {
     type: 'bar',

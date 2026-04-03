@@ -226,14 +226,23 @@ def logout():
 def dashboard():
     import pandas as pd
 
-    df = pd.read_excel("invoices.xlsx")
+    try:
+        df = pd.read_excel("invoices.xlsx")
+    except:
+        df = pd.DataFrame(columns=["Total"])
 
-    total_sales = df['Total'].sum()
+    total_sales = df['Total'].sum() if 'Total' in df else 0
     total_invoices = len(df)
 
-    return render_template("dashboard.html",
-                           total_sales=total_sales,
-                           total_invoices=total_invoices)
+    # 🔥 FIX: chart data
+    chart_data = df['Total'].fillna(0).tolist() if 'Total' in df else []
+
+    return render_template(
+        "dashboard.html",
+        total_sales=total_sales,
+        total_invoices=total_invoices,
+        chart_data=chart_data
+    )
 # ---------------- INWARD PAGE ----------------
 @app.route('/inward')
 def inward():
