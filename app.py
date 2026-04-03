@@ -4,9 +4,12 @@ import io
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from datetime import datetime 
 
 app = Flask(__name__)
 app.secret_key = "erp_secret"
+FILE = "parts.xlsx.xlsm"
+
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
@@ -26,61 +29,92 @@ def generate_invoice():
 
     content = []
 
-    # 🔥 COMPANY HEADER
+    # 🔥 HEADER
     content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
-    content.append(Paragraph("GSTIN: 27AAVFR6150R1Z4", styles['Normal']))
-    content.append(Paragraph("State: Maharashtra", styles['Normal']))
+    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4", styles['Normal']))
+    content.append(Paragraph("State Code : 27 Maharashtra", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # 🔥 INVOICE DETAILS
-    content.append(Paragraph("<b>TAX INVOICE</b>", styles['Heading2']))
-    content.append(Paragraph(f"Invoice Date: 2026", styles['Normal']))
+    # 🔥 INVOICE INFO TABLE
+    invoice_info = [
+        ["Invoice No:", "RPG/B/0010/26-27", "Date:", datetime.now().strftime("%d-%b-%Y")],
+        ["P.O No:", "18040009076", "Payment Terms:", "30 Days"]
+    ]
+
+    table1 = Table(invoice_info, colWidths=[80, 150, 80, 150])
+    table1.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    content.append(table1)
     content.append(Spacer(1, 10))
 
-    # 🔥 BUYER DETAILS
-    content.append(Paragraph(f"<b>Buyer:</b> {customer}", styles['Normal']))
+    # 🔥 BUYER & CONSIGNEE
+    buyer_data = [
+        ["Buyer:", customer],
+        ["Address:", "NANDUR, PUNE - 412202"],
+        ["GSTIN:", "27AAACF3125C1Z9"]
+    ]
+
+    consignee_data = [
+        ["Consignee:", customer],
+        ["Address:", "NANDUR, PUNE - 412202"],
+        ["GSTIN:", "27AAACF3125C1Z9"]
+    ]
+
+    buyer_table = Table(buyer_data)
+    consignee_table = Table(consignee_data)
+
+    buyer_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
+    consignee_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
+
+    content.append(buyer_table)
+    content.append(Spacer(1, 10))
+    content.append(consignee_table)
     content.append(Spacer(1, 10))
 
-    # 🔥 TABLE (LIKE YOUR IMAGE)
-    data = [
-        ["Sr No", "Description", "HSN", "Tax %", "Qty", "Rate", "Amount"],
+    # 🔥 MAIN TABLE
+    table_data = [
+        ["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"],
         ["1", part, "87089900", "18%", qty, rate, total]
     ]
 
-    table = Table(data, colWidths=[50, 150, 80, 60, 60, 60, 80])
+    table = Table(table_data, colWidths=[40, 150, 80, 60, 60, 60, 80])
 
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
         ('TEXTCOLOR',(0,0),(-1,0),colors.white),
         ('GRID',(0,0),(-1,-1),1,colors.black),
         ('ALIGN',(0,0),(-1,-1),'CENTER')
     ]))
 
     content.append(table)
-    content.append(Spacer(1, 20))
+    content.append(Spacer(1, 15))
 
-    # 🔥 TOTAL SECTION
-    totals = [
+    # 🔥 GST BREAKUP
+    gst_table = [
         ["Subtotal", total],
-        ["GST 18%", gst],
-        ["Final Amount", final]
+        ["CGST 9%", total*0.09],
+        ["SGST 9%", total*0.09],
+        ["Total", final]
     ]
 
-    total_table = Table(totals, colWidths=[200, 100])
-
-    total_table.setStyle(TableStyle([
+    gst_table = Table(gst_table, colWidths=[200, 100])
+    gst_table.setStyle(TableStyle([
         ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
-    content.append(total_table)
+    content.append(gst_table)
+    content.append(Spacer(1, 20))
+
+    # 🔥 FOOTER
+    content.append(Paragraph("For Radiance Polymers", styles['Normal']))
+    content.append(Spacer(1, 30))
+    content.append(Paragraph("Authorized Signatory", styles['Normal']))
 
     doc.build(content)
 
     return send_file(file_path, as_attachment=True)
-
-
-
-FILE = "parts.xlsx.xlsm"
 @app.route('/invoice')
 def invoice():
     if 'user' not in session:
