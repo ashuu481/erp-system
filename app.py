@@ -33,7 +33,45 @@ FILE = "parts.xlsx.xlsm"
 @app.route('/pdi')
 def pdi():
     return render_template("pdi.html")
+@app.route('/generate_pdi', methods=['POST'])
+def generate_pdi():
+    import pdfkit
+    import os
+    from datetime import datetime
+    from flask import render_template, request, send_from_directory
 
+    invoice_no = request.form['invoice_no']
+    part = request.form['part']
+
+    rows = [
+        {"spec":"Dimension 14.8 ±0.20mm","inst":"PP/DVC"},
+        {"spec":"Dimension 14.30 +0.20/-0.1 mm","inst":"PP/DVC"},
+        {"spec":"Dimension 17.80 ±0.20mm","inst":"PP/DVC"},
+        {"spec":"Dimension 13.50 ±0.30mm","inst":"PP/DVC"},
+        {"spec":"Part Weight 3 ±0.5gm","inst":"WM"},
+        {"spec":"Insertion force to Anchor 50N Max","inst":"UTM"},
+        {"spec":"Removal force from Anchor 200N Min","inst":"UTM"}
+    ]
+
+    html = render_template(
+        "pdi_template.html",
+        invoice_no=invoice_no,
+        part=part,
+        date=datetime.now().strftime("%d-%m-%Y"),
+        rows=rows
+    )
+
+    os.makedirs("static/pdi", exist_ok=True)
+
+    file_path = f"static/pdi/PDI-{invoice_no}.pdf"
+
+    config = pdfkit.configuration(
+        wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    )
+
+    pdfkit.from_string(html, file_path, configuration=config)
+
+    return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
 @app.route('/generate_pdi', methods=['POST'])
 
 def generate_pdi():
@@ -130,7 +168,7 @@ def generate_pdi():
     content.append(table)
 
     doc.build(content)
-    
+
 
     return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
 

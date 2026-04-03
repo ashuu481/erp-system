@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial; font-size: 12px; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 5px;
+    text-align: center;
+}
+
+.title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="title">
+SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
+</div>
+
+<br>
+
+<table>
+<tr>
+<td>DATE</td><td>{{date}}</td>
+<td>SUPPLIER</td><td>Radiance Polymers</td>
+<td>Raw Material</td><td>POM Celcon M90</td>
+</tr>
+
+<tr>
+<td>PART NAME</td><td>{{part}}</td>
+<td>PART NO</td><td>62598</td>
+<td>Master Batch</td><td></td>
+</tr>
+
+<tr>
+<td>LOT QTY</td><td></td>
+<td>INVOICE NO</td><td>{{invoice_no}}</td>
+<td>Batch No</td><td></td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+<th>Sr No</th>
+<th>Specification</th>
+<th>Instrument</th>
+<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
+<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
+<th>OK/NOK</th>
+<th>1</th><th>2</th><th>3</th><th>4</th>
+</tr>
+
+{% for row in rows %}
+<tr>
+<td>{{loop.index}}</td>
+<td>{{row.spec}}</td>
+<td>{{row.inst}}</td>
+<td></td><td></td><td></td><td></td>
+<td></td><td></td><td></td><td></td>
+<td></td>
+<td></td><td></td><td></td><td></td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>
