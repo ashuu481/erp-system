@@ -9,7 +9,9 @@ import io
 app = Flask(__name__)
 app.secret_key = "erp_secret"
 FILE = "parts.xlsx.xlsm"
+import os
 
+os.makedirs("static/invoices", exist_ok=True)
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
