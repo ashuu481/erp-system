@@ -70,9 +70,15 @@ body {
 <body>
 
 <!-- HEADER -->
-<div style="background:#020617; padding:10px 20px; display:flex; justify-content:space-between;">
-    <div>🚀 ERP System</div>
+<div style="background:#020617; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+    
+    <div style="display:flex; align-items:center; gap:10px;">
+        <img src="/static/logo.png" width="35">
+        <b>Radiance ERP</b>
+    </div>
+
     <div>👤 {{ session['user'] }}</div>
+
 </div>
 
 <div class="sidebar">
@@ -129,7 +135,7 @@ new Chart(canvas, {
 </script>
 
 <div style="text-align:center; margin-top:20px; color:gray;">
-    © ERP System | Developed by You 😎
+    © ERP System | Developed by ashu 😎
 </div>
 
 </div>
