@@ -224,14 +224,16 @@ def logout():
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
-    if session.get('role') != "admin":
-        return "Access Denied (Admin Only)"
+    import pandas as pd
 
-    df = pd.read_excel(FILE, engine="openpyxl", sheet_name=get_sheet(), header=None)
-    total = len(df)
-    col_counts = df.count().tolist() if not df.empty else []
+    df = pd.read_excel("invoices.xlsx")
 
-    return render_template("dashboard.html", total=total, chart_data=col_counts)
+    total_sales = df['Total'].sum()
+    total_invoices = len(df)
+
+    return render_template("dashboard.html",
+                           total_sales=total_sales,
+                           total_invoices=total_invoices)
 # ---------------- INWARD PAGE ----------------
 @app.route('/inward')
 def inward():
