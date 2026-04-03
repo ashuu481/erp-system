@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 
 from flask import Flask, render_template, request, redirect, session, send_file
@@ -26,20 +27,58 @@ def generate_invoice():
     qtys = request.form.getlist('qty[]')
     rates = request.form.getlist('rate[]')
 
-    # 🔥 CREATE UNIQUE INVOICE NO
+    # 🔥 INVOICE NO + FILE
     invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
     file_name = f"{invoice_no}.pdf"
 
     doc = SimpleDocTemplate(file_name)
     content = []
 
-    # HEADER
+    # 🔥 HEADER
     content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
-
+    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4 | State Code : 27 Maharashtra", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # TABLE
-    table_data = [["Sr", "Description", "Qty", "Rate", "Amount"]]
+    # 🔥 INVOICE INFO
+    info_data = [
+        ["Invoice No:", invoice_no, "Date:", datetime.now().strftime("%d-%b-%Y")],
+        ["P.O No:", "18040009076", "Payment Terms:", "30 Days"]
+    ]
+
+    info_table = Table(info_data, colWidths=[80, 150, 80, 150])
+    info_table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    content.append(info_table)
+    content.append(Spacer(1, 10))
+
+    # 🔥 BUYER + CONSIGNEE
+    buyer = [
+        ["Buyer:", customer],
+        ["Address:", "NANDUR, PUNE - 412202"],
+        ["GSTIN:", "27AAACF3125C1Z9"],
+        ["State:", "Maharashtra"]
+    ]
+
+    consignee = [
+        ["Consignee:", customer],
+        ["Address:", "NANDUR, PUNE - 412202"],
+        ["GSTIN:", "27AAACF3125C1Z9"],
+        ["State:", "Maharashtra"]
+    ]
+
+    buyer_table = Table(buyer)
+    consignee_table = Table(consignee)
+
+    buyer_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
+    consignee_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
+
+    content.append(Table([[buyer_table, consignee_table]]))
+    content.append(Spacer(1, 10))
+
+    # 🔥 MAIN TABLE
+    table_data = [["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"]]
 
     total = 0
 
@@ -50,27 +89,54 @@ def generate_invoice():
             amt = q * r
             total += amt
 
-            table_data.append([i+1, parts[i], q, r, amt])
+            table_data.append([
+                str(i+1),
+                parts[i],
+                "87089900",
+                "18%",
+                q,
+                r,
+                amt
+            ])
 
-    table = Table(table_data)
+    table = Table(table_data, colWidths=[40, 150, 80, 60, 60, 60, 80])
+
     table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black)
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('ALIGN',(0,0),(-1,-1),'CENTER')
     ]))
 
     content.append(table)
+    content.append(Spacer(1, 15))
 
-    # GST
+    # 🔥 GST CALCULATION
     cgst = total * 0.09
     sgst = total * 0.09
     grand = total + cgst + sgst
 
-    content.append(Spacer(1, 10))
-    content.append(Paragraph(f"Total: {total}", styles['Normal']))
-    content.append(Paragraph(f"CGST: {cgst}", styles['Normal']))
-    content.append(Paragraph(f"SGST: {sgst}", styles['Normal']))
-    content.append(Paragraph(f"<b>Grand Total: {grand}</b>", styles['Normal']))
+    gst_table = [
+        ["Subtotal", total],
+        ["CGST 9%", cgst],
+        ["SGST 9%", sgst],
+        ["Grand Total", grand]
+    ]
 
-    # BUILD PDF
+    t2 = Table(gst_table, colWidths=[200, 120])
+    t2.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    content.append(t2)
+    content.append(Spacer(1, 20))
+
+    # 🔥 SIGNATURE
+    content.append(Paragraph("For Radiance Polymers", styles['Normal']))
+    content.append(Spacer(1, 30))
+    content.append(Paragraph("Authorized Signatory", styles['Normal']))
+
+    # 🔥 BUILD PDF
     doc.build(content)
 
     # 🔥 SAVE HISTORY
@@ -93,7 +159,7 @@ def generate_invoice():
     df.to_excel(file_path_excel, index=False)
 
     return send_file(file_name, as_attachment=True)
-   
+
 @app.route('/invoice')
 def invoice():
     if 'user' not in session:

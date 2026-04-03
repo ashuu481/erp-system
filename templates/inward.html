@@ -1,8 +1,12 @@
+invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
+file_name = f"{invoice_no}.pdf"
+
+doc = SimpleDocTemplate(file_name)
+content = []
 <!DOCTYPE html>
 <html>
 <head>
 <title>Inward</title>
-
 <style>
 body {
     margin: 0;
