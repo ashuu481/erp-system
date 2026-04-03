@@ -11,9 +11,10 @@ def get_next_invoice_no():
     file = "invoices.xlsx"
 
     if not os.path.exists(file):
-        return "INV-001"
+        return "INV-001" 
+    
+    df = pd.read_excel(file) 
 
-    df = pd.read_excel(file)
 
     if len(df) == 0:
         return "INV-001"
