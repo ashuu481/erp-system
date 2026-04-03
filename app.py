@@ -35,23 +35,23 @@ def pdi():
     return render_template("pdi.html")
 
 @app.route('/generate_pdi', methods=['POST'])
+
 def generate_pdi():
-    import pandas as pd
+
     import os
     from datetime import datetime
     from flask import send_from_directory
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet
 
     styles = getSampleStyleSheet()
 
     invoice_no = request.form['invoice_no']
-    part = request.form['part']
-    qty = request.form['qty']
-    status = request.form['status']
-    checked_by = request.form['checked_by']
 
-    # 🔥 CREATE FOLDER
+    part = request.form['part']
+
+
     os.makedirs("static/pdi", exist_ok=True)
 
     file_name = f"static/pdi/PDI-{invoice_no}.pdf"
@@ -59,45 +59,78 @@ def generate_pdi():
     doc = SimpleDocTemplate(file_name)
     content = []
 
-    # 🔥 HEADER
-    content.append(Paragraph("<b>PDI REPORT</b>", styles['Title']))
+    # 🔥 TITLE
+    content.append(Paragraph(
+        "<b>SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT</b>",
+        styles['Title']
+    ))
     content.append(Spacer(1, 10))
 
-    content.append(Paragraph(f"Invoice No: {invoice_no}", styles['Normal']))
-    content.append(Paragraph(f"Date: {datetime.now().strftime('%d-%m-%Y')}", styles['Normal']))
+    # 🔥 TOP INFO TABLE
+    info_data = [
+        ["DATE", datetime.now().strftime("%d-%m-%Y"), "SUPPLIER", "Radiance Polymers", "Raw Material", "POM Celcon M90"],
+        ["PART NAME", part, "PART NO", "62598", "Master Batch", ""],
+        ["LOT QTY", "", "INVOICE NO", invoice_no, "Batch No", ""]
+    ]
+
+    info_table = Table(info_data, colWidths=[70, 120, 80, 150, 90, 120])
+    info_table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    content.append(info_table)
     content.append(Spacer(1, 10))
 
-    content.append(Paragraph(f"Part Name: {part}", styles['Normal']))
-    content.append(Paragraph(f"Quantity Checked: {qty}", styles['Normal']))
-    content.append(Paragraph(f"Status: {status}", styles['Normal']))
-    content.append(Spacer(1, 10))
+    # 🔥 MAIN HEADER
+    header = [
+        "Sr No", "Specification", "Measuring Instrument",
+        "CAV-1","CAV-2","CAV-3","CAV-4","CAV-5","CAV-6","CAV-7","CAV-8",
+        "OK/NOK","1","2","3","4"
+    ]
 
-    content.append(Paragraph(f"Checked By: {checked_by}", styles['Normal']))
-    content.append(Spacer(1, 20))
-    content.append(Paragraph("Signature: ____________", styles['Normal']))
+    table_data = [header]
+
+    # 🔥 SAMPLE ROWS (like your Excel)
+    specs = [
+        "Dimension 14.8 ±0.20mm",
+        "Dimension 14.30 +0.20/-0.1 mm",
+        "Dimension 17.80 ±0.20mm",
+        "Dimension 13.50 ±0.30mm",
+        "Part Weight 3 ±0.5gm",
+        "Insertion force to Anchor 50N Max",
+        "Removal force from Anchor 200N Min"
+    ]
+
+    instruments = [
+        "PP/DVC","PP/DVC","PP/DVC","PP/DVC",
+        "WM","UTM","UTM"
+    ]
+
+    for i in range(len(specs)):
+        row = [
+            str(i+1),
+            specs[i],
+            instruments[i],
+            "","","","","","","","","",
+            "","","",""
+        ]
+        table_data.append(row)
+
+    # 🔥 TABLE
+    table = Table(table_data, repeatRows=1)
+
+    table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE')
+    ]))
+
+    content.append(table)
 
     doc.build(content)
-
-    # 🔥 SAVE HISTORY
-    file_path = "pdi.xlsx"
-
-    new_row = {
-        "Invoice No": invoice_no,
-        "Part": part,
-        "Qty": qty,
-        "Status": status,
-        "Checked By": checked_by,
-        "Date": datetime.now().strftime("%d-%m-%Y"),
-        "File": f"PDI-{invoice_no}.pdf"
-    }
-
-    if os.path.exists(file_path):
-        df = pd.read_excel(file_path)
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    else:
-        df = pd.DataFrame([new_row])
-
-    df.to_excel(file_path, index=False)
+    
 
     return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
 
