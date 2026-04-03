@@ -5,63 +5,132 @@
 
 <style>
 body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial;
     background: #0f172a;
     color: white;
-    font-family: Arial;
-    text-align: center;
 }
 
+/* HEADER */
+.header {
+    background: #020617;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+/* CARD */
+.card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+/* INPUT */
 input {
-    padding: 8px;
+    padding: 10px;
     margin: 5px;
     border-radius: 6px;
     border: none;
+    width: 200px;
 }
 
+/* BUTTON */
 button {
-    padding: 10px;
+    padding: 10px 15px;
     background: #38bdf8;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+}
+
+button:hover {
+    background: #0ea5e9;
+}
+
+/* TABLE */
+.item-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    color: gray;
 }
 </style>
 
 <script>
 function addRow() {
     let div = document.getElementById("items");
+
     let row = `
-    <div>
-        <input name="part[]" placeholder="Part">
+    <div class="item-row">
+        <input name="part[]" placeholder="Part Name">
         <input name="qty[]" type="number" placeholder="Qty">
         <input name="rate[]" type="number" placeholder="Rate">
     </div>`;
+
     div.insertAdjacentHTML('beforeend', row);
 }
 </script>
 
 </head>
+
 <body>
 
-<h2>🧾 Generate Invoice</h2>
+<!-- HEADER -->
+<div class="header">
+    <div>🚀 Radiance ERP</div>
+    <div>👤 {{ session['user'] }}</div>
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<h2>🧾 Generate Professional Invoice</h2>
 
 <form method="POST" action="/generate_invoice">
 
-    <input name="customer" placeholder="Customer Name" required><br>
+    <!-- CUSTOMER -->
+    <input name="customer" placeholder="Customer Name" required>
 
+    <!-- ITEMS -->
     <div id="items">
-        <div>
-            <input name="part[]" placeholder="Part">
+        <div class="item-row">
+            <input name="part[]" placeholder="Part Name">
             <input name="qty[]" type="number" placeholder="Qty">
             <input name="rate[]" type="number" placeholder="Rate">
         </div>
     </div>
 
-    <button type="button" onclick="addRow()">➕ Add Item</button><br><br>
+    <br>
 
-    <button type="submit">Generate Invoice</button>
+    <button type="button" onclick="addRow()">➕ Add Item</button>
+
+    <br><br>
+
+    <button type="submit">🧾 Generate Invoice PDF</button>
 
 </form>
+
+</div>
+
+<div class="footer">
+    © 2026 Radiance ERP | Developed by Ashutosh Rode 🚀
+</div>
+
+</div>
 
 </body>
 </html>

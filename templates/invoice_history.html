@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Invoice History</title>
+
+<style>
+body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+}
+
+table {
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #1e293b;
+}
+
+tr:nth-child(even) {
+    background: #1e293b;
+}
+</style>
+
+</head>
+<body>
+
+<h2 style="text-align:center;">📜 Invoice History</h2>
+
+<table>
+<tr>
+    <th>Invoice No</th>
+    <th>Customer</th>
+    <th>Total</th>
+    <th>Date</th>
+    <th>Download</th>
+</tr>
+
+{% for row in data %}
+<tr>
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[3] }}</td>
+    <td>
+        <a href="/download/{{ row[4] }}">Download</a>
+    </td>
+</tr>
+{% endfor %}
+</table>
+
+</body>
+</html>

@@ -1,10 +1,9 @@
+import os
+
 from flask import Flask, render_template, request, redirect, session, send_file
 import pandas as pd
 import io
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from datetime import datetime 
+
 
 app = Flask(__name__)
 app.secret_key = "erp_secret"
@@ -13,6 +12,13 @@ FILE = "parts.xlsx.xlsm"
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
+    import pandas as pd
+    import os
+    from datetime import datetime
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet
+
     styles = getSampleStyleSheet()
 
     customer = request.form['customer']
@@ -20,54 +26,20 @@ def generate_invoice():
     qtys = request.form.getlist('qty[]')
     rates = request.form.getlist('rate[]')
 
-    doc = SimpleDocTemplate("invoice.pdf")
+    # 🔥 CREATE UNIQUE INVOICE NO
+    invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
+    file_name = f"{invoice_no}.pdf"
+
+    doc = SimpleDocTemplate(file_name)
     content = []
 
-    # 🔥 HEADER
+    # HEADER
     content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
-    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4 | State Code : 27 Maharashtra", styles['Normal']))
+
     content.append(Spacer(1, 10))
 
-    # 🔥 INVOICE INFO (TOP BOX LIKE IMAGE)
-    info_data = [
-        ["Invoice No:", "RPG/B/0010/26-27", "Date:", datetime.now().strftime("%d-%b-%Y")],
-        ["P.O No:", "18040009076", "Payment Terms:", "30 Days"]
-    ]
-
-    info_table = Table(info_data, colWidths=[80, 150, 80, 150])
-    info_table.setStyle(TableStyle([
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
-    ]))
-    content.append(info_table)
-    content.append(Spacer(1, 10))
-
-    # 🔥 BUYER + CONSIGNEE SIDE BY SIDE
-    buyer = [
-        ["Buyer:", customer],
-        ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"],
-        ["State:", "Maharashtra"]
-    ]
-
-    consignee = [
-        ["Consignee:", customer],
-        ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"],
-        ["State:", "Maharashtra"]
-    ]
-
-    buyer_table = Table(buyer)
-    consignee_table = Table(consignee)
-
-    buyer_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
-    consignee_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
-
-    side_by_side = Table([[buyer_table, consignee_table]])
-    content.append(side_by_side)
-    content.append(Spacer(1, 10))
-
-    # 🔥 MAIN ITEM TABLE (MULTI ROW)
-    table_data = [["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"]]
+    # TABLE
+    table_data = [["Sr", "Description", "Qty", "Rate", "Amount"]]
 
     total = 0
 
@@ -78,62 +50,67 @@ def generate_invoice():
             amt = q * r
             total += amt
 
-            table_data.append([
-                str(i+1),
-                parts[i],
-                "87089900",
-                "18%",
-                q,
-                r,
-                amt
-            ])
+            table_data.append([i+1, parts[i], q, r, amt])
 
-    table = Table(table_data, colWidths=[40, 150, 80, 60, 60, 60, 80])
-
+    table = Table(table_data)
     table.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,0),colors.grey),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('ALIGN',(0,0),(-1,-1),'CENTER')
+        ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
     content.append(table)
-    content.append(Spacer(1, 15))
 
-    # 🔥 GST + TOTAL SECTION (LIKE IMAGE RIGHT SIDE)
+    # GST
     cgst = total * 0.09
     sgst = total * 0.09
     grand = total + cgst + sgst
 
-    totals = [
-        ["Subtotal", total],
-        ["CGST 9%", cgst],
-        ["SGST 9%", sgst],
-        ["Grand Total", grand]
-    ]
+    content.append(Spacer(1, 10))
+    content.append(Paragraph(f"Total: {total}", styles['Normal']))
+    content.append(Paragraph(f"CGST: {cgst}", styles['Normal']))
+    content.append(Paragraph(f"SGST: {sgst}", styles['Normal']))
+    content.append(Paragraph(f"<b>Grand Total: {grand}</b>", styles['Normal']))
 
-    total_table = Table(totals, colWidths=[200, 120])
-    total_table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black)
-    ]))
-
-    content.append(total_table)
-    content.append(Spacer(1, 20))
-
-    # 🔥 FOOTER (SIGN)
-    content.append(Paragraph("For Radiance Polymers", styles['Normal']))
-    content.append(Spacer(1, 30))
-    content.append(Paragraph("Authorized Signatory", styles['Normal']))
-
+    # BUILD PDF
     doc.build(content)
 
-    return send_file("invoice.pdf", as_attachment=True)
+    # 🔥 SAVE HISTORY
+    file_path_excel = "invoices.xlsx"
+
+    new_row = {
+        "Invoice No": invoice_no,
+        "Customer": customer,
+        "Total": grand,
+        "Date": datetime.now().strftime("%d-%m-%Y"),
+        "File": file_name
+    }
+
+    if os.path.exists(file_path_excel):
+        df = pd.read_excel(file_path_excel)
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    else:
+        df = pd.DataFrame([new_row])
+
+    df.to_excel(file_path_excel, index=False)
+
+    return send_file(file_name, as_attachment=True)
+   
 @app.route('/invoice')
 def invoice():
     if 'user' not in session:
         return redirect('/login')
     return render_template("invoice.html")
+@app.route('/invoice_history')
+def invoice_history():
+    if session.get('role') != "admin":
+        return "Access Denied"
 
+    df = pd.read_excel("invoices.xlsx")
+    data = df.fillna("").values.tolist()
+
+    return render_template("invoice_history.html", data=data)
+@app.route('/download/<filename>')
+def download(filename):
+    return send_file(filename, as_attachment=True)
 # ---------------- AUTO SHEET DETECT ----------------
 def get_sheet():
     xls = pd.ExcelFile(FILE, engine="openpyxl")
