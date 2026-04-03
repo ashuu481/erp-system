@@ -4,20 +4,39 @@ import os
 from flask import Flask, render_template, request, redirect, send_from_directory, session, send_file
 import pandas as pd
 import io
+def get_next_invoice_no():
+    import os
+    import pandas as pd
 
+    file = "invoices.xlsx"
+
+    if not os.path.exists(file):
+        return "INV-001"
+
+    df = pd.read_excel(file)
+
+    if len(df) == 0:
+        return "INV-001"
+
+    try:
+        last = df.iloc[-1]["Invoice No"]
+        num = int(last.split("-")[1])
+        return f"INV-{num+1:03d}"
+    except:
+        return "INV-001"
 
 app = Flask(__name__)
 app.secret_key = "erp_secret"
 FILE = "parts.xlsx.xlsm"
-import os
 
-os.makedirs("static/invoices", exist_ok=True)
+
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     import pandas as pd
     import os
     from datetime import datetime
+    from flask import send_from_directory
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet
@@ -29,13 +48,21 @@ def generate_invoice():
     qtys = request.form.getlist('qty[]')
     rates = request.form.getlist('rate[]')
 
-    # 🔥 INVOICE NO + FILE
-    invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
+  
+
+    # 🔥 AUTO INVOICE NUMBER
+    invoice_no = get_next_invoice_no()
+
+    # 🔥 ENSURE FOLDER EXISTS
+    os.makedirs("static/invoices", exist_ok=True)
+
+    # 🔥 FILE PATH (IMPORTANT FOR MOBILE)
     file_name = f"static/invoices/{invoice_no}.pdf"
+
     doc = SimpleDocTemplate(file_name)
     content = []
 
-    # 🔥 HEADER
+    # 🔥 HEADER (NO LOGO)
     content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
     content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4 | State Code : 27 Maharashtra", styles['Normal']))
     content.append(Spacer(1, 10))
@@ -140,7 +167,7 @@ def generate_invoice():
     # 🔥 BUILD PDF
     doc.build(content)
 
-    # 🔥 SAVE HISTORY
+    # 🔥 SAVE HISTORY (EXCEL)
     file_path_excel = "invoices.xlsx"
 
     new_row = {
@@ -148,7 +175,7 @@ def generate_invoice():
         "Customer": customer,
         "Total": grand,
         "Date": datetime.now().strftime("%d-%m-%Y"),
-        "File": file_name
+        "File": f"{invoice_no}.pdf"
     }
 
     if os.path.exists(file_path_excel):
@@ -159,13 +186,13 @@ def generate_invoice():
 
     df.to_excel(file_path_excel, index=False)
 
-    from flask import send_from_directory
-
+    # 🔥 MOBILE DOWNLOAD FIX
     return send_from_directory(
-    "static/invoices",
-    f"{invoice_no}.pdf",
-    as_attachment=True
-)
+        "static/invoices",
+        f"{invoice_no}.pdf",
+        as_attachment=True
+    )
+
 
 @app.route('/invoice')
 def invoice():
