@@ -2,7 +2,11 @@
 <html>
 <head>
 <title>PDI Form</title>
-
+<form method="POST" action="/generate_pdi">
+    <input name="invoice_no" placeholder="Invoice No" required>
+    <input name="part" placeholder="Part Name" required>
+    <button type="submit">Generate PDI</button>
+</form>
 <style>
 body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
 input, select {
