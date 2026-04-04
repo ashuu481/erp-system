@@ -1,3 +1,4 @@
+from flask import Flask, render_template, request, send_from_directory
 from datetime import date, datetime
 import os
 
@@ -66,10 +67,36 @@ def generate_pdi():
     import os
     from datetime import datetime
     from flask import render_template, request, send_from_directory
-    invoice_no = request.form['invoice_no']
-    part = request.form['part']
 
-    # 🔥 ADD HERE
+    print("Selected Company:", company)
+    # 🔥 BASIC DATA
+    invoice_no = request.form.get('invoice_no', '')
+    part = request.form.get('part', '')
+    customer = request.form.get('customer', '')
+    print("Selected Company:", company)
+
+    # 🔥 SPECIFICATIONS (same for all)
+    rows = [
+        {"spec":"5.10 ±0.05 mm","inst":"PP/DVC"},
+        {"spec":"6.05 ±0.1 mm","inst":"PP/DVC"},
+        {"spec":"16.1 ±0.2 mm","inst":"PP/DVC"},
+        {"spec":"7.5 ±0.15 mm","inst":"PP/DVC"},
+        {"spec":"15.3 ±0.1 mm","inst":"PP/DVC"},
+        {"spec":"Insertion force 50N","inst":"UTM"},
+        {"spec":"Removal force 200N","inst":"UTM"}
+    ]
+
+    # 🔥 AESTHETIC
+    aesthetic = [
+        "Colour - OK",
+        "Free from flashes",
+        "Free from short shot",
+        "Free from scratches",
+        "No damage",
+        "Proper labeling"
+    ]
+
+    # 🔥 USER ENTERED VALUES
     values = []
     for i in range(7):
         row = []
@@ -77,46 +104,38 @@ def generate_pdi():
             row.append(request.form.get(f"val{i}_{j}", ""))
         ok = request.form.get(f"ok{i}", "")
         values.append({"vals": row, "ok": ok})
-    
-    
-    aesthetic = [
-    "Colour - Granite Black",
-    "Free from flashes",
-    "Free from short shot",
-    "Free from sink mark",
-    "Free from glass/flow mark",
-    "Free from shine patch mark",
-    "Free from scratches & damage",
-    "No missing red sticker",
-    "Packaging & labeling"
-]
 
-    # 🔥 DATA (same as your Excel)
-    rows = [
-        {"spec":"Dimension 14.8 ±0.20mm","inst":"PP/DVC"},
-        {"spec":"Dimension 14.30 +0.20/-0.1 mm","inst":"PP/DVC"},
-        {"spec":"Dimension 17.80 ±0.20mm","inst":"PP/DVC"},
-        {"spec":"Dimension 13.50 ±0.30mm","inst":"PP/DVC"},
-        {"spec":"Part Weight 3 ±0.5gm","inst":"WM"},
-        {"spec":"Insertion force to Anchor 50N Max","inst":"UTM"},
-        {"spec":"Removal force from Anchor 200N Min","inst":"UTM"}
-    ]
+    # 🔥 SELECT TEMPLATE BASED ON COMPANY
+    if company == "itw":
+        template = "pdi_template.html"
 
+    elif company == "fleetguard":
+        template = "pdi_fleetguard.html"
+
+    elif company == "kinetic":
+        template = "pdi_kinetic.html"
+
+    else:
+        template = "pdi_template.html"
+
+    # 🔥 RENDER HTML
     html = render_template(
-    "pdi_template.html",
-    invoice_no=invoice_no,
-    part=part,
-    date=date,
-    rows=rows,
-    aesthetic=aesthetic,
-    values=values   # 🔥 ADD THIS LINE
-)
+        template,
+        invoice_no=invoice_no,
+        part=part,
+        customer=customer,
+        date=datetime.now().strftime("%d-%m-%Y"),
+        rows=rows,
+        aesthetic=aesthetic,
+        values=values
+    )
+
     # 🔥 CREATE FOLDER
     os.makedirs("static/pdi", exist_ok=True)
 
     file_path = f"static/pdi/PDI-{invoice_no}.pdf"
 
-    # 🔥 CONFIG (IMPORTANT)
+    # 🔥 WKHTMLTOPDF PATH (CHANGE IF NEEDED)
     config = pdfkit.configuration(
         wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
     )
@@ -126,7 +145,7 @@ def generate_pdi():
 
     # 🔥 DOWNLOAD
     return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
-
+    
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():

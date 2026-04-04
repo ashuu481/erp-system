@@ -2,28 +2,26 @@
 <html>
 <head>
 <style>
-body { font-family: Arial; font-size: 12px; }
-th {
-    background: #d9d9d9;
-    font-weight: bold;
+body {
+    font-family: Arial;
+    font-size: 12px;
 }
 
-td {
-    height: 25px;
-}
-
-table {
-    margin-bottom: 10px;
-}
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-bottom: 15px;
 }
 
 td, th {
     border: 1px solid black;
     padding: 5px;
     text-align: center;
+}
+
+th {
+    background: #d9d9d9;
+    font-weight: bold;
 }
 
 .title {
@@ -42,6 +40,7 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 
 <br>
 
+<!-- 🔥 HEADER INFO -->
 <table>
 <tr>
 <td>DATE</td><td>{{date}}</td>
@@ -61,31 +60,10 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 <td>Batch No</td><td></td>
 </tr>
 </table>
-<br><br>
 
-<table>
-<tr>
-<th colspan="3">Aesthetic</th>
-<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
-<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
-<th>OK/NOK</th>
-</tr>
-
-{% for row in aesthetic %}
-<tr>
-<td>{{loop.index}}</td>
-<td colspan="2">{{row}}</td>
-
-<td></td><td></td><td></td><td></td>
-<td></td><td></td><td></td><td></td>
-
-<td></td>
-</tr>
-{% endfor %}
-
-</table>
 <br>
 
+<!-- 🔥 1️⃣ SPECIFICATION TABLE (TOP) -->
 <table>
 <tr>
 <th>Sr No</th>
@@ -111,6 +89,30 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 
 <td></td><td></td><td></td><td></td>
 
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- 🔥 2️⃣ AESTHETIC TABLE (BOTTOM) -->
+<table>
+<tr>
+<th colspan="3">Aesthetic</th>
+<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
+<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
+<th>OK/NOK</th>
+</tr>
+
+{% for row in aesthetic %}
+<tr>
+<td>{{loop.index}}</td>
+<td colspan="2">{{row}}</td>
+
+<td></td><td></td><td></td><td></td>
+<td></td><td></td><td></td><td></td>
+
+<td></td>
 </tr>
 {% endfor %}
 

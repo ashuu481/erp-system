@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial; }
+table { width:100%; border-collapse: collapse; }
+td, th { border:1px solid black; padding:5px; }
+</style>
+</head>
+
+<body>
+
+<h3 style="text-align:center">KINETIC PDI REPORT</h3>
+
+<table>
+<tr>
+<td>Invoice</td><td>{{invoice_no}}</td>
+<td>Part</td><td>{{part}}</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+<th>Sr</th>
+<th>Specification</th>
+<th>OK/NOK</th>
+</tr>
+
+{% for row in rows %}
+<tr>
+<td>{{loop.index}}</td>
+<td>{{row.spec}}</td>
+<td>{{values[loop.index0].ok}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>
