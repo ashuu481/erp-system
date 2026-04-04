@@ -3,7 +3,18 @@
 <head>
 <style>
 body { font-family: Arial; font-size: 12px; }
+th {
+    background: #d9d9d9;
+    font-weight: bold;
+}
 
+td {
+    height: 25px;
+}
+
+table {
+    margin-bottom: 10px;
+}
 table {
     width: 100%;
     border-collapse: collapse;
@@ -50,7 +61,29 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 <td>Batch No</td><td></td>
 </tr>
 </table>
+<br><br>
 
+<table>
+<tr>
+<th colspan="3">Aesthetic</th>
+<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
+<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
+<th>OK/NOK</th>
+</tr>
+
+{% for row in aesthetic %}
+<tr>
+<td>{{loop.index}}</td>
+<td colspan="2">{{row}}</td>
+
+<td></td><td></td><td></td><td></td>
+<td></td><td></td><td></td><td></td>
+
+<td></td>
+</tr>
+{% endfor %}
+
+</table>
 <br>
 
 <table>
@@ -69,10 +102,15 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 <td>{{loop.index}}</td>
 <td>{{row.spec}}</td>
 <td>{{row.inst}}</td>
+
+{% for v in values[loop.index0].vals %}
+<td>{{v}}</td>
+{% endfor %}
+
+<td>{{values[loop.index0].ok}}</td>
+
 <td></td><td></td><td></td><td></td>
-<td></td><td></td><td></td><td></td>
-<td></td>
-<td></td><td></td><td></td><td></td>
+
 </tr>
 {% endfor %}
 

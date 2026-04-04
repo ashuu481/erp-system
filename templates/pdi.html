@@ -2,49 +2,127 @@
 <html>
 <head>
 <title>PDI Form</title>
-<form method="POST" action="/generate_pdi">
-    <input name="invoice_no" placeholder="Invoice No" required>
-    <input name="part" placeholder="Part Name" required>
-    <button type="submit">Generate PDI</button>
-</form>
+
 <style>
-body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
-input, select {
-    padding:10px;
-    margin:10px;
-    width:250px;
-    border-radius:6px;
-    border:none;
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
 }
+
+h2 {
+    margin-top: 20px;
+}
+
+input, select {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 6px;
+    border: none;
+}
+
+table {
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    color: black;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 6px;
+    text-align: center;
+}
+
+th {
+    background: #d9d9d9;
+}
+
 button {
-    padding:10px 20px;
-    background:#38bdf8;
-    border:none;
-    border-radius:6px;
+    padding: 10px 20px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 6px;
+    margin-top: 10px;
 }
 </style>
 
 </head>
+
 <body>
 
-<h2>📋 PDI Report</h2>
+<h2>📋 PDI Inspection Form</h2>
 
 <form method="POST" action="/generate_pdi">
 
-<input name="invoice_no" placeholder="Invoice No" required><br>
-<input name="part" placeholder="Part Name" required><br>
-<input name="qty" type="number" placeholder="Qty Checked" required><br>
+<!-- 🔥 Invoice Dropdown -->
+<select name="invoice_no" id="invoice" onchange="fillData()" required>
+    <option value="">Select Invoice</option>
+    {% for inv in invoices %}
+    <option value="{{inv['Invoice No']}}"
+        data-customer="{{inv['Customer']}}"
+        data-part="{{inv.get('Part','')}}">
+        {{inv['Invoice No']}}
+    </option>
+    {% endfor %}
+</select>
 
-<select name="status">
-    <option>OK</option>
-    <option>Not OK</option>
-</select><br>
+<br>
 
-<input name="checked_by" placeholder="Checked By" required><br>
+<input name="customer" id="customer" placeholder="Customer" readonly>
+<input name="part" id="part" placeholder="Part Name" required>
+
+<br><br>
+
+<!-- 🔥 DIMENSION TABLE -->
+<table>
+<tr>
+<th>Sr</th>
+<th>Specification</th>
+<th>CAV-1</th>
+<th>CAV-2</th>
+<th>CAV-3</th>
+<th>CAV-4</th>
+<th>CAV-5</th>
+<th>CAV-6</th>
+<th>OK/NOK</th>
+</tr>
+
+{% for i in range(7) %}
+<tr>
+<td>{{i+1}}</td>
+
+<td>
+<input name="spec{{i}}" value="{{ specs[i] }}" readonly style="width:180px">
+</td>
+
+{% for j in range(6) %}
+<td><input name="val{{i}}_{{j}}" style="width:60px"></td>
+{% endfor %}
+
+<td><input name="ok{{i}}" style="width:70px"></td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
 
 <button type="submit">Generate PDI</button>
 
 </form>
+
+<!-- 🔥 AUTO FILL SCRIPT -->
+<script>
+function fillData(){
+    let option = document.getElementById("invoice").selectedOptions[0];
+
+    document.getElementById("customer").value = option.dataset.customer || "";
+    document.getElementById("part").value = option.dataset.part || "";
+}
+</script>
 
 </body>
 </html>

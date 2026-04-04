@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import date, datetime
 import os
 
 from flask import Flask, render_template, request, redirect, send_from_directory, session, send_file
 import pandas as pd
 import io
+
+from sqlalchemy import values
 def get_next_invoice_no():
     import os
     import pandas as pd
@@ -32,46 +34,31 @@ FILE = "parts.xlsx.xlsm"
 
 @app.route('/pdi')
 def pdi():
-    return render_template("pdi.html")
-@app.route('/generate_pdi', methods=['POST'])
-def generate_pdi():
-    import pdfkit
-    import os
-    from datetime import datetime
-    from flask import render_template, request, send_from_directory
+    import pandas as pd
 
-    invoice_no = request.form['invoice_no']
-    part = request.form['part']
+    try:
+        df = pd.read_excel("invoices.xlsx")
 
-    rows = [
-        {"spec":"Dimension 14.8 ±0.20mm","inst":"PP/DVC"},
-        {"spec":"Dimension 14.30 +0.20/-0.1 mm","inst":"PP/DVC"},
-        {"spec":"Dimension 17.80 ±0.20mm","inst":"PP/DVC"},
-        {"spec":"Dimension 13.50 ±0.30mm","inst":"PP/DVC"},
-        {"spec":"Part Weight 3 ±0.5gm","inst":"WM"},
-        {"spec":"Insertion force to Anchor 50N Max","inst":"UTM"},
-        {"spec":"Removal force from Anchor 200N Min","inst":"UTM"}
+        # 🔥 DEBUG PRINT (IMPORTANT)
+        print(df.columns)
+
+        invoices = df.to_dict(orient="records")
+
+    except Exception as e:
+        print("ERROR:", e)
+        invoices = []
+
+    specs = [
+        "5.10 ±0.05 mm",
+        "6.05 ±0.1 mm",
+        "16.1 ±0.2 mm",
+        "7.5 ±0.15 mm",
+        "15.3 ±0.1 mm",
+        "Insertion force 50N",
+        "Removal force 200N"
     ]
 
-    html = render_template(
-        "pdi_template.html",
-        invoice_no=invoice_no,
-        part=part,
-        date=datetime.now().strftime("%d-%m-%Y"),
-        rows=rows
-    )
-
-    os.makedirs("static/pdi", exist_ok=True)
-
-    file_path = f"static/pdi/PDI-{invoice_no}.pdf"
-
-    config = pdfkit.configuration(
-        wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-    )
-
-    pdfkit.from_string(html, file_path, configuration=config)
-
-    return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
+    return render_template("pdi.html", invoices=invoices, specs=specs)
 
 @app.route('/generate_pdi', methods=['POST'])
 def generate_pdi():
@@ -79,9 +66,30 @@ def generate_pdi():
     import os
     from datetime import datetime
     from flask import render_template, request, send_from_directory
-
     invoice_no = request.form['invoice_no']
     part = request.form['part']
+
+    # 🔥 ADD HERE
+    values = []
+    for i in range(7):
+        row = []
+        for j in range(6):
+            row.append(request.form.get(f"val{i}_{j}", ""))
+        ok = request.form.get(f"ok{i}", "")
+        values.append({"vals": row, "ok": ok})
+    
+    
+    aesthetic = [
+    "Colour - Granite Black",
+    "Free from flashes",
+    "Free from short shot",
+    "Free from sink mark",
+    "Free from glass/flow mark",
+    "Free from shine patch mark",
+    "Free from scratches & damage",
+    "No missing red sticker",
+    "Packaging & labeling"
+]
 
     # 🔥 DATA (same as your Excel)
     rows = [
@@ -95,13 +103,14 @@ def generate_pdi():
     ]
 
     html = render_template(
-        "pdi_template.html",
-        invoice_no=invoice_no,
-        part=part,
-        date=datetime.now().strftime("%d-%m-%Y"),
-        rows=rows
-    )
-
+    "pdi_template.html",
+    invoice_no=invoice_no,
+    part=part,
+    date=date,
+    rows=rows,
+    aesthetic=aesthetic,
+    values=values   # 🔥 ADD THIS LINE
+)
     # 🔥 CREATE FOLDER
     os.makedirs("static/pdi", exist_ok=True)
 
