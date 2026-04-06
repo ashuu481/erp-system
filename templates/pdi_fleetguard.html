@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial; font-size: 10px; }
+
+table { width:100%; border-collapse: collapse; }
+
+td, th {
+    border:1px solid black;
+    padding:4px;
+    text-align:center;
+}
+
+.title {
+    text-align:center;
+    font-weight:bold;
+    font-size:15px;
+}
+
+.section {
+    background:#d9d9d9;
+    font-weight:bold;
+}
+
+.left { text-align:left; }
+</style>
+</head>
+
+<body>
+
+<div class="title">PRE DISPATCH INSPECTION REPORT</div>
+
+<br>
+
+<!-- HEADER -->
+<table>
+<tr>
+<td class="left">Supplier</td><td>{{customer}}</td>
+<td class="left">Invoice</td><td>{{invoice_no}}</td>
+</tr>
+<tr>
+<td class="left">Part</td><td>{{part}}</td>
+<td class="left">Date</td><td>{{date}}</td>
+</tr>
+</table>
+
+<br>
+
+<!-- DIMENSION -->
+<table>
+<tr class="section">
+<th colspan="10">DIMENSION CHECK</th>
+</tr>
+
+<tr>
+<th>Sr</th>
+<th>Specification</th>
+<th>C1</th><th>C2</th><th>C3</th>
+<th>C4</th><th>C5</th><th>C6</th>
+<th>OK/NOK</th>
+</tr>
+
+{% for row in rows %}
+<tr>
+<td>{{loop.index}}</td>
+<td class="left">{{row.spec}}</td>
+
+{% for v in values[loop.index0].vals %}
+<td>{{v}}</td>
+{% endfor %}
+
+<td>{{values[loop.index0].ok}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- AESTHETIC -->
+<table>
+<tr class="section">
+<th colspan="5">AESTHETIC CHECK</th>
+</tr>
+
+{% for row in aesthetic %}
+<tr>
+<td class="left" colspan="4">{{row}}</td>
+<td>OK</td>
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- FINAL -->
+<table>
+<tr>
+<td>Final Result</td>
+<td>ACCEPTED / REJECTED</td>
+</tr>
+
+<tr>
+<td>Checked By</td>
+<td>Approved By</td>
+</tr>
+</table>
+
+</body>
+</html>

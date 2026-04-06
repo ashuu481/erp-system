@@ -1,103 +1,96 @@
-invoice_no = "INV-" + datetime.now().strftime("%Y%m%d%H%M%S")
-file_name = f"{invoice_no}.pdf"
-
-doc = SimpleDocTemplate(file_name)
-content = []
 <!DOCTYPE html>
 <html>
 <head>
-<title>Inward</title>
+<title>Inward Entry</title>
+
 <style>
 body {
-    margin: 0;
-    font-family: 'Segoe UI', Arial;
+    font-family: Arial;
     background: #0f172a;
     color: white;
-}
-
-.container {
-    width: 90%;
-    margin: auto;
-}
-
-input {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 6px;
-    border: none;
-}
-
-button {
-    background: #38bdf8;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-}
-
-table {
-    width: 100%;
-    margin-top: 15px;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 10px;
     text-align: center;
 }
 
-th {
-    background: #1e293b;
+table {
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    color: black;
 }
 
-tr:nth-child(even) {
-    background: #1e293b;
+th, td {
+    border: 1px solid black;
+    padding: 6px;
+}
+
+input {
+    width: 100%;
+    border: none;
+    padding: 5px;
+}
+
+button {
+    margin: 10px;
+    padding: 8px 15px;
 }
 </style>
-
 </head>
+
 <body>
-
-<div style="background:#020617; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
-    
-    <div style="display:flex; align-items:center; gap:10px;">
-        <img src="/static/logo.png" width="35">
-        <b>Radiance ERP</b>
-    </div>
-
-    <div>👤 {{ session['user'] }}</div>
-</div>
-
-<div class="container">
 
 <h2>📥 Inward Entry</h2>
 
-<a href="/dashboard">⬅ Back</a>
+<form method="POST" action="/save_inward">
 
-<form method="POST" action="/add_inward">
-    <input name="part_no" placeholder="Part No">
-    <input name="description" placeholder="Description">
-    <input name="qty_in" placeholder="Qty In">
-    <input name="qty_out" placeholder="Qty Out">
-    <input name="rejection" placeholder="Rejection">
-    <button type="submit">Add</button>
-</form>
+<table id="inwardTable">
 
-<table>
-{% for row in data %}
 <tr>
-    {% for cell in row %}
-    <td>{{ cell }}</td>
-    {% endfor %}
+<th>Sr No</th>
+<th>Part Description</th>
+<th>Part No</th>
+<th>Rate</th>
+<th>Production Qty</th>
+<th>WIP Qty</th>
+<th>FG Qty</th>
+<th>Total Stock</th>
 </tr>
-{% endfor %}
+
+<tr>
+<td><input name="sr[]"></td>
+<td><input name="desc[]"></td>
+<td><input name="part_no[]"></td>
+<td><input name="rate[]"></td>
+<td><input name="prod_qty[]"></td>
+<td><input name="wip_qty[]"></td>
+<td><input name="fg_qty[]"></td>
+<td><input name="total[]"></td>
+</tr>
+
 </table>
 
-<div style="text-align:center; margin-top:20px; color:gray;">
-    © ERP System Developed by ashu
-     😎
-</div>
+<button type="button" onclick="addRow()">➕ Add Row</button>
+<br>
+<button type="submit">💾 Save</button>
 
-</div>
+</form>
+
+<script>
+function addRow() {
+    let table = document.getElementById("inwardTable");
+    let row = table.insertRow();
+
+    row.innerHTML = `
+        <td><input name="sr[]"></td>
+        <td><input name="desc[]"></td>
+        <td><input name="part_no[]"></td>
+        <td><input name="rate[]"></td>
+        <td><input name="prod_qty[]"></td>
+        <td><input name="wip_qty[]"></td>
+        <td><input name="fg_qty[]"></td>
+        <td><input name="total[]"></td>
+    `;
+}
+</script>
+
 </body>
 </html>

@@ -56,7 +56,10 @@ tr:hover {
 
 </head>
 <body>
-
+<a href="/export?part_no={{ request.args.get('part_no','') }}">
+    <button type="button">Export</button>
+</a>
+<!-- HEADER -->
 <div style="background:#020617; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
     
     <div style="display:flex; align-items:center; gap:10px;">
@@ -73,15 +76,15 @@ tr:hover {
 
 <a href="/dashboard">⬅ Back</a>
 
-<form method="GET">
-    <input name="part_no" placeholder="🔍 Search Part No">
+<!-- 🔍 SEARCH -->
+<form method="GET" style="margin-top:10px;">
+    <input name="part_no" placeholder="🔍 Search Part No" value="{{ request.args.get('part_no','') }}">
     
-    <div>
-        <button type="submit">Search</button>
-        <a href="/export?part_no={{ request.args.get('part_no','') }}">
-            <button type="button">Export</button>
-        </a>
-    </div>
+    <button type="submit">Search</button>
+
+    <a href="/stock">
+        <button type="button">Reset</button>
+    </a>
 </form>
 
 {% if data|length == 0 %}
@@ -90,19 +93,37 @@ tr:hover {
 </div>
 {% endif %}
 
+<!-- 🔥 TABLE -->
 <table>
+
+<tr>
+<th>Sr No</th>
+<th>Part Description</th>
+<th>Part No</th>
+<th>Rate</th>
+<th>Production</th>
+<th>WIP</th>
+<th>FG</th>
+<th>Total</th>
+</tr>
+
 {% for row in data %}
 <tr>
-    {% for cell in row %}
-    <td>{{ cell }}</td>
-    {% endfor %}
+<td>{{row.sr}}</td>
+<td>{{row.desc}}</td>
+<td>{{row.part_no}}</td>
+<td>{{row.rate}}</td>
+<td>{{row.prod}}</td>
+<td>{{row.wip}}</td>
+<td>{{row.fg}}</td>
+<td>{{row.total}}</td>
 </tr>
 {% endfor %}
+
 </table>
 
 <div style="text-align:center; margin-top:20px; color:gray;">
-    © ERP System Developed by ashu
-     😎
+    © ERP System Developed by Ashu 😎
 </div>
 
 </div>

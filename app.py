@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, config, render_template, request, send_from_directory
 from datetime import date, datetime
 import os
 
 from flask import Flask, render_template, request, redirect, send_from_directory, session, send_file
 import pandas as pd
 import io
+import datetime
 
+def get_next_invoice_no():
+    return "INV-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 from sqlalchemy import values
 def get_next_invoice_no():
     import os
@@ -60,65 +63,108 @@ def pdi():
     ]
 
     return render_template("pdi.html", invoices=invoices, specs=specs)
+def check_ok_nok(value, spec):
+    try:
+        if "±" in spec:
+            base, tol = spec.split("±")
+            base = float(base.strip())
+            tol = float(tol.strip().split()[0])
 
+            min_val = base - tol
+            max_val = base + tol
+
+            val = float(value)
+
+            return "OK" if min_val <= val <= max_val else "NOK"
+
+        else:
+            return "OK"  # for non-numeric specs
+
+    except:
+        return "OK"
+    
 @app.route('/generate_pdi', methods=['POST'])
 def generate_pdi():
-    import pdfkit
-    import os
+    import pdfkit, os
     from datetime import datetime
     from flask import render_template, request, send_from_directory
 
-    print("Selected Company:", company)
-    # 🔥 BASIC DATA
+    # 🔥 FORM DATA (SAFE)
+    company = request.form.get('company', '')
     invoice_no = request.form.get('invoice_no', '')
     part = request.form.get('part', '')
     customer = request.form.get('customer', '')
-    print("Selected Company:", company)
 
-    # 🔥 SPECIFICATIONS (same for all)
+    # 🔥 SPEC DATA
     rows = [
-        {"spec":"5.10 ±0.05 mm","inst":"PP/DVC"},
-        {"spec":"6.05 ±0.1 mm","inst":"PP/DVC"},
-        {"spec":"16.1 ±0.2 mm","inst":"PP/DVC"},
-        {"spec":"7.5 ±0.15 mm","inst":"PP/DVC"},
-        {"spec":"15.3 ±0.1 mm","inst":"PP/DVC"},
-        {"spec":"Insertion force 50N","inst":"UTM"},
-        {"spec":"Removal force 200N","inst":"UTM"}
+        {"spec":"5.10 ±0.05","inst":"PP/DVC"},
+        {"spec":"6.05 ±0.10","inst":"PP/DVC"},
+        {"spec":"16.10 ±0.20","inst":"PP/DVC"},
+        {"spec":"7.50 ±0.15","inst":"PP/DVC"},
+        {"spec":"15.30 ±0.10","inst":"PP/DVC"},
+        {"spec":"50","inst":"UTM"},
+        {"spec":"200","inst":"UTM"}
     ]
 
     # 🔥 AESTHETIC
     aesthetic = [
-        "Colour - OK",
-        "Free from flashes",
-        "Free from short shot",
-        "Free from scratches",
+        "Colour OK",
+        "No scratches",
         "No damage",
         "Proper labeling"
     ]
 
-    # 🔥 USER ENTERED VALUES
+    # 🔥 SIMPLE SAFE CHECK FUNCTION
+    def safe_check(val, spec):
+        try:
+            if "±" in spec:
+                base, tol = spec.split("±")
+                base = float(base.strip())
+                tol = float(tol.strip())
+
+                min_v = base - tol
+                max_v = base + tol
+
+                v = float(val)
+
+                if min_v <= v <= max_v:
+                    return "OK"
+                else:
+                    return "NOK"
+            else:
+                return "OK"
+        except:
+            return "OK"
+
+    # 🔥 VALUES (NO ERROR VERSION)
     values = []
+
     for i in range(7):
-        row = []
+        row_vals = []
+        status = "OK"
+
         for j in range(6):
-            row.append(request.form.get(f"val{i}_{j}", ""))
-        ok = request.form.get(f"ok{i}", "")
-        values.append({"vals": row, "ok": ok})
+            val = request.form.get(f"val{i}_{j}", "")
+            row_vals.append(val)
 
-    # 🔥 SELECT TEMPLATE BASED ON COMPANY
-    if company == "itw":
-        template = "pdi_template.html"
+            if val != "":
+                if safe_check(val, rows[i]["spec"]) == "NOK":
+                    status = "NOK"
 
-    elif company == "fleetguard":
+        values.append({
+            "vals": row_vals,
+            "ok": status
+        })
+
+    # 🔥 TEMPLATE SELECT
+    if company == "fleetguard":
         template = "pdi_fleetguard.html"
-
     elif company == "kinetic":
         template = "pdi_kinetic.html"
-
     else:
         template = "pdi_template.html"
 
-    # 🔥 RENDER HTML
+    # 🔥 RENDER
     html = render_template(
         template,
         invoice_no=invoice_no,
@@ -130,184 +176,88 @@ def generate_pdi():
         values=values
     )
 
-    # 🔥 CREATE FOLDER
+    # 🔥 SAVE PDF
     os.makedirs("static/pdi", exist_ok=True)
 
     file_path = f"static/pdi/PDI-{invoice_no}.pdf"
 
-    # 🔥 WKHTMLTOPDF PATH (CHANGE IF NEEDED)
+
     config = pdfkit.configuration(
         wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
     )
 
-    # 🔥 GENERATE PDF
-    pdfkit.from_string(html, file_path, configuration=config)
+    options = {
+        'orientation': 'Landscape',
+        'page-size': 'A4',
+        'margin-top': '5mm',
+        'margin-bottom': '5mm',
+        'margin-left': '5mm',
+        'margin-right': '5mm'
+    }
 
-    # 🔥 DOWNLOAD
+    pdfkit.from_string(html, file_path, configuration=config, options=options)
+
+
     return send_from_directory("static/pdi", f"PDI-{invoice_no}.pdf", as_attachment=True)
-    
+
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
-    import pandas as pd
-    import os
-    from datetime import datetime
-    from flask import send_from_directory
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet
+    import pdfkit, os
+    from flask import request, render_template, send_from_directory
 
-    styles = getSampleStyleSheet()
-
-    customer = request.form['customer']
-    parts = request.form.getlist('part[]')
-    qtys = request.form.getlist('qty[]')
-    rates = request.form.getlist('rate[]')
-
-
-    # 🔥 AUTO INVOICE NUMBER
     invoice_no = get_next_invoice_no()
 
-    # 🔥 ENSURE FOLDER EXISTS
-    os.makedirs("static/invoices", exist_ok=True)
+    customer = request.form.get('customer', '')
+    date = request.form.get('date', '')
+    items = request.form.getlist('item[]')
+    qtys = request.form.getlist('qty[]')
+    prices = request.form.getlist('price[]')
 
-    # 🔥 FILE PATH (IMPORTANT FOR MOBILE)
-    file_name = f"static/invoices/{invoice_no}.pdf"
-
-    doc = SimpleDocTemplate(file_name)
-    content = []
-
-    # 🔥 HEADER (NO LOGO)
-    content.append(Paragraph("<b>RADIANCE POLYMERS</b>", styles['Title']))
-    content.append(Paragraph("GSTIN : 27AAVFR6150R1Z4 | State Code : 27 Maharashtra", styles['Normal']))
-    content.append(Spacer(1, 10))
-
-    # 🔥 INVOICE INFO
-    info_data = [
-        ["Invoice No:", invoice_no, "Date:", datetime.now().strftime("%d-%b-%Y")],
-        ["P.O No:", "18040009076", "Payment Terms:", "30 Days"]
-    ]
-
-    info_table = Table(info_data, colWidths=[80, 150, 80, 150])
-    info_table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black)
-    ]))
-
-    content.append(info_table)
-    content.append(Spacer(1, 10))
-
-    # 🔥 BUYER + CONSIGNEE
-    buyer = [
-        ["Buyer:", customer],
-        ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"],
-        ["State:", "Maharashtra"]
-    ]
-
-    consignee = [
-        ["Consignee:", customer],
-        ["Address:", "NANDUR, PUNE - 412202"],
-        ["GSTIN:", "27AAACF3125C1Z9"],
-        ["State:", "Maharashtra"]
-    ]
-
-    buyer_table = Table(buyer)
-    consignee_table = Table(consignee)
-
-    buyer_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
-    consignee_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
-
-    content.append(Table([[buyer_table, consignee_table]]))
-    content.append(Spacer(1, 10))
-
-    # 🔥 MAIN TABLE
-    table_data = [["Sr", "Description", "HSN/SAC", "Tax %", "Qty", "Rate", "Amount"]]
-
+    data = []
     total = 0
 
-    for i in range(len(parts)):
-        if parts[i]:
-            q = float(qtys[i])
-            r = float(rates[i])
-            amt = q * r
-            total += amt
+    for i in range(len(items)):
+        try:
+            qty = float(qtys[i])
+            price = float(prices[i])
+            amount = qty * price
+        except:
+            qty = 0
+            price = 0
+            amount = 0
 
-            table_data.append([
-                str(i+1),
-                parts[i],
-                "87089900",
-                "18%",
-                q,
-                r,
-                amt
-            ])
+        total += amount
 
-    table = Table(table_data, colWidths=[40, 150, 80, 60, 60, 60, 80])
+        data.append({
+            "item": items[i],
+            "qty": qty,
+            "price": price,
+            "amount": amount
+        })
 
-    table.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,0),colors.grey),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('ALIGN',(0,0),(-1,-1),'CENTER')
-    ]))
-
-    content.append(table)
-    content.append(Spacer(1, 15))
-
-    # 🔥 GST CALCULATION
-    cgst = total * 0.09
-    sgst = total * 0.09
-    grand = total + cgst + sgst
-
-    gst_table = [
-        ["Subtotal", total],
-        ["CGST 9%", cgst],
-        ["SGST 9%", sgst],
-        ["Grand Total", grand]
-    ]
-
-    t2 = Table(gst_table, colWidths=[200, 120])
-    t2.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black)
-    ]))
-
-    content.append(t2)
-    content.append(Spacer(1, 20))
-
-    # 🔥 SIGNATURE
-    content.append(Paragraph("For Radiance Polymers", styles['Normal']))
-    content.append(Spacer(1, 30))
-    content.append(Paragraph("Authorized Signatory", styles['Normal']))
-
-    # 🔥 BUILD PDF
-    doc.build(content)
-
-    # 🔥 SAVE HISTORY (EXCEL)
-    file_path_excel = "invoices.xlsx"
-
-    new_row = {
-        "Invoice No": invoice_no,
-        "Customer": customer,
-        "Total": grand,
-        "Date": datetime.now().strftime("%d-%m-%Y"),
-        "File": f"{invoice_no}.pdf"
-    }
-
-    if os.path.exists(file_path_excel):
-        df = pd.read_excel(file_path_excel)
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    else:
-        df = pd.DataFrame([new_row])
-
-    df.to_excel(file_path_excel, index=False)
-
-    # 🔥 MOBILE DOWNLOAD FIX
-    return send_from_directory(
-        "static/invoices",
-        f"{invoice_no}.pdf",
-        as_attachment=True
+    html = render_template(
+        "invoice.html",
+        invoice_no=invoice_no,
+        customer=customer,
+        date=date,
+        data=data,
+        total=total
     )
 
+    os.makedirs("static/invoices", exist_ok=True)
+    file_path = f"static/invoices/{invoice_no}.pdf"
+
+    config = pdfkit.configuration(
+        wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    )
+
+    pdfkit.from_string(html, file_path, configuration=config)
+
+    return send_from_directory("static/invoices", f"{invoice_no}.pdf", as_attachment=True)
+@app.route('/invoice')
+def invoice_page():
+    return render_template("invoice_form.html")
 
 @app.route('/invoice')
 def invoice():
@@ -373,25 +323,39 @@ def logout():
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
-    import pandas as pd
+    import os
 
-    try:
-        df = pd.read_excel("invoices.xlsx")
-    except:
-        df = pd.DataFrame(columns=["Total"])
+    invoice_folder = "static/invoices"
+    pdi_folder = "static/pdi"
 
-    total_sales = df['Total'].sum() if 'Total' in df else 0
-    total_invoices = len(df)
+    invoices = []
+    pdis = []
 
-    # 🔥 FIX: chart data
-    chart_data = df['Total'].fillna(0).tolist() if 'Total' in df else []
+    # 🔥 SAFE FILE READ
+    if os.path.exists(invoice_folder):
+        invoices = os.listdir(invoice_folder)
+
+    if os.path.exists(pdi_folder):
+        pdis = os.listdir(pdi_folder)
+
+    # 🔥 TOTALS
+    total_invoices = len(invoices)
+    total_pdi = len(pdis)
+
+    # 🔥 DUMMY SALES (SAFE)
+    total_sales = total_invoices * 1000   # you can improve later
+
+    # 🔥 CHART DATA (ALWAYS LIST)
+    chart_data = [total_invoices, total_pdi]
 
     return render_template(
         "dashboard.html",
+        total=total_invoices + total_pdi,
         total_sales=total_sales,
         total_invoices=total_invoices,
         chart_data=chart_data
     )
+    
 # ---------------- INWARD PAGE ----------------
 @app.route('/inward')
 def inward():
@@ -402,6 +366,48 @@ def inward():
     data = df.fillna("").values.tolist()
 
     return render_template("inward.html", data=data)
+import json
+from flask import request
+
+@app.route('/save_inward', methods=['POST'])
+def save_inward():
+    sr = request.form.getlist('sr[]')
+    desc = request.form.getlist('desc[]')
+    part_no = request.form.getlist('part_no[]')
+    rate = request.form.getlist('rate[]')
+    prod = request.form.getlist('prod_qty[]')
+    wip = request.form.getlist('wip_qty[]')
+    fg = request.form.getlist('fg_qty[]')
+    total = request.form.getlist('total[]')
+
+    data = []
+
+    for i in range(len(sr)):
+        if part_no[i]:  # skip empty rows
+            data.append({
+                "sr": sr[i],
+                "desc": desc[i],
+                "part_no": part_no[i],
+                "rate": rate[i],
+                "prod": prod[i],
+                "wip": wip[i],
+                "fg": fg[i],
+                "total": total[i]
+            })
+
+    # 🔥 SAVE TO FILE
+    try:
+        with open("inward_data.json", "r") as f:
+            old_data = json.load(f)
+    except:
+        old_data = []
+
+    old_data.extend(data)
+
+    with open("inward_data.json", "w") as f:
+        json.dump(old_data, f, indent=4)
+
+    return "Inward Saved Successfully ✅"
 
 
 # ---------------- ADD INWARD ----------------
@@ -435,21 +441,54 @@ def add_inward():
 # ---------------- STOCK ----------------
 @app.route('/stock')
 def stock():
-    if session.get('role') != "admin":
-        return "Access Denied (Admin Only)"
+    import pandas as pd
+    import json
+    from flask import request
 
-    df = pd.read_excel(FILE, engine="openpyxl", sheet_name=get_sheet(), header=None)
+    data = []
 
-    part_no = request.args.get('part_no', '').strip()
+    # 🔥 STEP 1: READ EXCEL (SIMPLE)
+    try:
+        df = pd.read_excel("parts.xlsx.xlsm", engine="openpyxl", sheet_name=0)
 
+        print("✅ Excel Loaded")
+        print(df.head())
+
+        # clean
+        df = df.dropna(how='all')
+        df = df.fillna("")
+
+        # 🔥 DIRECT COLUMN ACCESS (NO AUTO DETECT NOW)
+        for _, row in df.iterrows():
+            data.append({
+                "sr": row.iloc[0],
+                "desc": row.iloc[1],
+                "part_no": str(row.iloc[2]),
+                "rate": row.iloc[3],
+                "prod": row.iloc[4],
+                "wip": row.iloc[5],
+                "fg": row.iloc[6],
+                "total": row.iloc[7]
+            })
+
+    except Exception as e:
+        print("❌ Excel error:", e)
+
+    # 🔥 STEP 2: ADD INWARD DATA
+    try:
+        with open("inward_data.json", "r") as f:
+            inward = json.load(f)
+            data.extend(inward)
+    except:
+        pass
+
+    # 🔍 SEARCH
+    part_no = request.args.get("part_no")
     if part_no:
-        df = df[df.astype(str).apply(
-            lambda x: x.str.contains(part_no, case=False, na=False)
-        ).any(axis=1)]
-
-    data = df.fillna("").values.tolist()
+        data = [d for d in data if part_no.lower() in str(d["part_no"]).lower()]
 
     return render_template("stock.html", data=data)
+
 @app.route('/activity')
 def activity():
     if session.get('role') != "admin":

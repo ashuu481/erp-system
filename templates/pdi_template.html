@@ -2,83 +2,112 @@
 <html>
 <head>
 <style>
+
+@page {
+    size: A4 landscape;
+    margin: 5mm;
+}
+
 body {
     font-family: Arial;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
 }
 
 td, th {
     border: 1px solid black;
-    padding: 5px;
+    padding: 6px;
     text-align: center;
-}
-
-th {
-    background: #d9d9d9;
-    font-weight: bold;
+    vertical-align: middle;
 }
 
 .title {
     text-align: center;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 14px;
 }
+
+.left { text-align: left; }
+.bold { font-weight: bold; }
+
+.big { height: 28px; } /* writing space */
+
 </style>
 </head>
 
 <body>
 
-<div class="title">
-SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
-</div>
-
-<br>
-
-<!-- 🔥 HEADER INFO -->
+<!-- 🔥 HEADER -->
 <table>
 <tr>
-<td>DATE</td><td>{{date}}</td>
-<td>SUPPLIER</td><td>Radiance Polymers</td>
-<td>Raw Material</td><td>POM Celcon M90</td>
+<td style="width:15%" class="bold">ITW</td>
+<td colspan="5" class="title">
+SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
+</td>
 </tr>
 
 <tr>
-<td>PART NAME</td><td>{{part}}</td>
-<td>PART NO</td><td>62598</td>
-<td>Master Batch</td><td></td>
+<td class="left bold">DATE :</td>
+<td>{{date}}</td>
+<td class="left bold">SUPPLIER</td>
+<td>{{customer}}</td>
+<td class="left bold">RAW MATERIAL</td>
+<td></td>
 </tr>
 
 <tr>
-<td>LOT QTY</td><td></td>
-<td>INVOICE NO</td><td>{{invoice_no}}</td>
-<td>Batch No</td><td></td>
+<td class="left bold">PART NAME :</td>
+<td>{{part}}</td>
+<td class="left bold">PART NO</td>
+<td></td>
+<td class="left bold">MASTER BATCH</td>
+<td></td>
+</tr>
+
+<tr>
+<td class="left bold">LOT QTY :</td>
+<td></td>
+<td class="left bold">INVOICE NO</td>
+<td>{{invoice_no}}</td>
+<td class="left bold">BATCH NO</td>
+<td></td>
 </tr>
 </table>
 
 <br>
 
-<!-- 🔥 1️⃣ SPECIFICATION TABLE (TOP) -->
+<!-- 🔥 MAIN TABLE -->
 <table>
+
 <tr>
-<th>Sr No</th>
-<th>Specification</th>
-<th>Instrument</th>
-<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
-<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
-<th>OK/NOK</th>
-<th>1</th><th>2</th><th>3</th><th>4</th>
+<th rowspan="2" style="width:3%">Sr</th>
+<th rowspan="2" style="width:18%">Specification</th>
+<th rowspan="2" style="width:10%">Measuring Instrument</th>
+
+<th colspan="7">SUPPLIER INSPECTION OBSERVATIONS</th>
+<th colspan="6">ITW RECEIVING INSPECTION OBSERVATION</th>
+
+<th rowspan="2" style="width:5%">OK/NOK</th>
+</tr>
+
+<tr>
+<th>C1</th><th>C2</th><th>C3</th>
+<th>C4</th><th>C5</th><th>C6</th>
+<th>OK</th>
+
+<th>1</th><th>2</th><th>3</th>
+<th>4</th><th>5</th><th>6</th>
 </tr>
 
 {% for row in rows %}
-<tr>
+<tr class="big">
 <td>{{loop.index}}</td>
-<td>{{row.spec}}</td>
+
+<td class="left">{{row.spec}}</td>
 <td>{{row.inst}}</td>
 
 {% for v in values[loop.index0].vals %}
@@ -87,35 +116,70 @@ SUPPLIER P.D.I. REPORT CUM ITW RECEIVING INSPECTION REPORT
 
 <td>{{values[loop.index0].ok}}</td>
 
-<td></td><td></td><td></td><td></td>
+<!-- ITW EMPTY SPACE -->
+<td></td><td></td><td></td>
+<td></td><td></td><td></td>
 
+<td>{{values[loop.index0].ok}}</td>
 </tr>
 {% endfor %}
+
+<!-- 🔥 AESTHETIC -->
+<tr>
+<td colspan="17" class="bold left">Aesthetic</td>
+</tr>
+
+{% for row in aesthetic %}
+<tr class="big">
+<td>{{loop.index}}</td>
+<td class="left">{{row}}</td>
+<td>Visual</td>
+
+<td>OK</td><td>OK</td><td>OK</td>
+<td>OK</td><td>OK</td><td>OK</td>
+<td>OK</td>
+
+<td></td><td></td><td></td>
+<td></td><td></td><td></td>
+
+<td>OK</td>
+</tr>
+{% endfor %}
+
 </table>
 
 <br>
 
-<!-- 🔥 2️⃣ AESTHETIC TABLE (BOTTOM) -->
+<!-- 🔥 FOOTER -->
 <table>
-<tr>
-<th colspan="3">Aesthetic</th>
-<th>CAV-1</th><th>CAV-2</th><th>CAV-3</th><th>CAV-4</th>
-<th>CAV-5</th><th>CAV-6</th><th>CAV-7</th><th>CAV-8</th>
-<th>OK/NOK</th>
+<tr class="big">
+<td class="left">SUPPLIER REMARK :</td>
+<td colspan="5"></td>
+<td class="left">Remark :</td>
+<td colspan="5"></td>
 </tr>
 
-{% for row in aesthetic %}
-<tr>
-<td>{{loop.index}}</td>
-<td colspan="2">{{row}}</td>
-
-<td></td><td></td><td></td><td></td>
-<td></td><td></td><td></td><td></td>
-
+<tr class="big">
+<td>ACCEPTED :</td>
+<td>✔</td>
+<td>REJECTED :</td>
 <td></td>
-</tr>
-{% endfor %}
 
+<td>ACCEPTED :</td>
+<td></td>
+<td>REJECTED :</td>
+<td></td>
+
+<td colspan="4"></td>
+</tr>
+
+<tr class="big">
+<td>CHECKED BY</td>
+<td colspan="3"></td>
+<td>APPROVED BY</td>
+<td colspan="3"></td>
+<td colspan="4"></td>
+</tr>
 </table>
 
 </body>

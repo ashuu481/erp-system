@@ -2,40 +2,131 @@
 <html>
 <head>
 <style>
-body { font-family: Arial; }
-table { width:100%; border-collapse: collapse; }
-td, th { border:1px solid black; padding:5px; }
+body { font-family: Arial; font-size: 10px; }
+
+table { width: 100%; border-collapse: collapse; }
+
+td, th {
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+}
+
+.title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.header td {
+    font-weight: bold;
+}
+
+.yellow {
+    background-color: #fff59d;
+    font-weight: bold;
+}
+
+.left { text-align: left; }
 </style>
 </head>
 
 <body>
 
-<h3 style="text-align:center">KINETIC PDI REPORT</h3>
+<div class="title">PRE DISPATCH INSPECTION REPORT</div>
 
-<table>
+<br>
+
+<!-- 🔥 HEADER BLOCK -->
+<table class="header">
 <tr>
-<td>Invoice</td><td>{{invoice_no}}</td>
-<td>Part</td><td>{{part}}</td>
+<td class="left">Supplier Name</td><td>{{customer}}</td>
+<td>Part No</td><td>-</td>
+</tr>
+
+<tr>
+<td class="left">Customer Name</td><td>Kinetic Electric Motor Co. Pvt. Ltd.</td>
+<td>Part Name</td><td>{{part}}</td>
+</tr>
+
+<tr>
+<td class="left">Invoice No</td><td>{{invoice_no}}</td>
+<td>Date</td><td>{{date}}</td>
 </tr>
 </table>
 
 <br>
 
+<!-- 🔥 MAIN TABLE -->
 <table>
 <tr>
 <th>Sr</th>
-<th>Specification</th>
+<th>Parameter</th>
+<th>Spec</th>
+<th>Measuring Inst</th>
+<th>Freq</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
 <th>OK/NOK</th>
 </tr>
 
 {% for row in rows %}
 <tr>
 <td>{{loop.index}}</td>
-<td>{{row.spec}}</td>
-<td>{{values[loop.index0].ok}}</td>
-</tr>
+
+<td class="left">{{row.spec}}</td>
+<td>-</td>
+<td>{{row.inst}}</td>
+<td>-</td>
+
+{% for v in values[loop.index0].vals %}
+<td>{{v}}</td>
 {% endfor %}
 
+<td>{{values[loop.index0].ok}}</td>
+
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- 🔥 AESTHETIC / VISUAL -->
+<table>
+<tr>
+<th colspan="6" class="yellow">VISUAL / AESTHETIC CHECK</th>
+</tr>
+
+{% for row in aesthetic %}
+<tr>
+<td class="left" colspan="3">{{row}}</td>
+
+<td>OK</td>
+<td>OK</td>
+<td>OK</td>
+
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- 🔥 FOOTER -->
+<table>
+<tr>
+<td class="left">Remarks:</td>
+<td colspan="3"></td>
+</tr>
+
+<tr>
+<td>Prepared By</td>
+<td>Checked By</td>
+<td>Approved By</td>
+<td>Date</td>
+</tr>
 </table>
 
 </body>

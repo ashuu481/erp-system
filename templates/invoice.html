@@ -1,136 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Invoice</title>
+<meta charset="UTF-8">
 
 <style>
 body {
-    margin: 0;
-    font-family: 'Segoe UI', Arial;
-    background: #0f172a;
-    color: white;
+    font-family: Arial;
+    font-size: 12px;
+    margin: 10px;
 }
 
-/* HEADER */
-.header {
-    background: #020617;
-    padding: 12px 20px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.container {
-    width: 90%;
-    margin: auto;
-}
-
-/* CARD */
-.card {
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 20px;
-}
-
-/* INPUT */
-input {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 6px;
-    border: none;
-    width: 200px;
-}
-
-/* BUTTON */
-button {
-    padding: 10px 15px;
-    background: #38bdf8;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #0ea5e9;
-}
-
-/* TABLE */
-.item-row {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-/* FOOTER */
-.footer {
+.company {
     text-align: center;
-    margin-top: 20px;
-    color: gray;
+    font-size: 20px;
+    font-weight: bold;
 }
+
+.address {
+    text-align: center;
+    font-size: 12px;
+}
+
+.invoice-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 6px;
+}
+
+.no-border td {
+    border: none;
+}
+
+.left { text-align: left; }
+.center { text-align: center; }
+.right { text-align: right; }
+
+.bold { font-weight: bold; }
+
 </style>
-
-<script>
-function addRow() {
-    let div = document.getElementById("items");
-
-    let row = `
-    <div class="item-row">
-        <input name="part[]" placeholder="Part Name">
-        <input name="qty[]" type="number" placeholder="Qty">
-        <input name="rate[]" type="number" placeholder="Rate">
-    </div>`;
-
-    div.insertAdjacentHTML('beforeend', row);
-}
-</script>
-
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-    <div>🚀 Radiance ERP</div>
-    <div>👤 {{ session['user'] }}</div>
+<!-- 🔥 COMPANY HEADER -->
+<div class="company">RADIANCE POLYMERS</div>
+<div class="address">
+Sector No 12, Spine Road, Pune<br>
+Phone: 8767642572 | Email: radiancepolymer@gmail.com
 </div>
 
-<div class="container">
+<div class="invoice-title">TAX INVOICE</div>
 
-<div class="card">
+<!-- 🔥 CUSTOMER + INVOICE DETAILS -->
+<table>
+<tr>
+<td class="left" style="width:60%">
+<b>Bill To:</b><br>
+{{customer}}
+</td>
 
-<h2>🧾 Generate Professional Invoice</h2>
+<td style="width:40%">
+<b>Invoice No:</b> {{invoice_no}}<br>
+<b>Date:</b> {{date}}<br>
+<b>GST No:</b> XXXXXXXX
+</td>
+</tr>
+</table>
 
-<form method="POST" action="/generate_invoice">
+<!-- 🔥 ITEM TABLE -->
+<table>
+<tr class="center bold">
+<th style="width:5%">Sr</th>
+<th style="width:45%">Description</th>
+<th style="width:15%">Qty</th>
+<th style="width:15%">Rate</th>
+<th style="width:20%">Amount</th>
+</tr>
 
-    <!-- CUSTOMER -->
-    <input name="customer" placeholder="Customer Name" required>
+{% for row in data %}
+<tr>
+<td class="center">{{loop.index}}</td>
+<td class="left">{{row.item}}</td>
+<td class="center">{{row.qty}}</td>
+<td class="center">{{row.price}}</td>
+<td class="right">{{row.amount}}</td>
+</tr>
+{% endfor %}
 
-    <!-- ITEMS -->
-    <div id="items">
-        <div class="item-row">
-            <input name="part[]" placeholder="Part Name">
-            <input name="qty[]" type="number" placeholder="Qty">
-            <input name="rate[]" type="number" placeholder="Rate">
-        </div>
-    </div>
+<tr>
+<td colspan="4" class="right bold">Subtotal</td>
+<td class="right">{{total}}</td>
+</tr>
 
-    <br>
+<tr>
+<td colspan="4" class="right bold">GST (18%)</td>
+<td class="right">{{ (total * 0.18) | round(2) }}</td>
+</tr>
 
-    <button type="button" onclick="addRow()">➕ Add Item</button>
+<tr>
+<td colspan="4" class="right bold">Grand Total</td>
+<td class="right bold">{{ (total * 1.18) | round(2) }}</td>
+</tr>
+</table>
 
-    <br><br>
+<br>
 
-    <button type="submit">🧾 Generate Invoice PDF</button>
+<!-- 🔥 AMOUNT IN WORDS -->
+<table>
+<tr>
+<td class="left">
+<b>Amount in Words:</b><br>
+{{ (total * 1.18) | round(2) }} Only
+</td>
+</tr>
+</table>
 
-</form>
+<br><br>
 
-</div>
+<!-- 🔥 SIGNATURE -->
+<table class="no-border">
+<tr>
+<td class="left">Customer Signature</td>
+<td class="right">For Radiance Polymers</td>
+</tr>
 
-<div class="footer">
-    © 2026 Radiance ERP | Developed by Ashutosh Rode 🚀
-</div>
-
-</div>
+<tr>
+<td></td>
+<td class="right">Authorized Signatory</td>
+</tr>
+</table>
 
 </body>
 </html>

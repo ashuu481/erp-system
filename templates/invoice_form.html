@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Create Invoice</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #0f172a;
+    color: white;
+}
+
+input {
+    padding: 6px;
+    margin: 3px;
+    border-radius: 5px;
+    border: none;
+}
+
+table {
+    margin: auto;
+    background: white;
+    color: black;
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 6px;
+}
+
+button {
+    padding: 8px 15px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Create Invoice</h2>
+
+<form method="POST" action="/generate_invoice">
+
+<input name="customer" placeholder="Customer Name" required>
+<input name="date" type="date" required>
+
+<br><br>
+
+<table id="itemTable">
+<tr>
+<th>Item</th>
+<th>Qty</th>
+<th>Price</th>
+</tr>
+
+<tr>
+<td><input name="item[]"></td>
+<td><input name="qty[]"></td>
+<td><input name="price[]"></td>
+</tr>
+</table>
+
+<br>
+
+<button type="button" onclick="addRow()">Add Item</button>
+
+<br><br>
+
+<button type="submit">Generate Invoice</button>
+
+</form>
+
+<script>
+function addRow() {
+    let table = document.getElementById("itemTable");
+    let row = table.insertRow();
+
+    row.innerHTML = `
+        <td><input name="item[]"></td>
+        <td><input name="qty[]"></td>
+        <td><input name="price[]"></td>
+    `;
+}
+</script>
+
+</body>
+</html>

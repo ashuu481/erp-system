@@ -2,8 +2,7 @@
 <html>
 <head>
 <title>Dashboard</title>
-<h2>Total Sales: ₹{{ total_sales }}</h2>
-<h2>Total Invoices: {{ total_invoices }}</h2>
+<meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -14,8 +13,18 @@ body {
     color: white;
 }
 
+/* HEADER */
+.header {
+    background:#020617;
+    padding:12px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* SIDEBAR */
 .sidebar {
-    width: 200px;
+    width: 210px;
     height: 100vh;
     position: fixed;
     background: #1e293b;
@@ -42,11 +51,13 @@ body {
     transform: translateX(5px);
 }
 
+/* MAIN */
 .main {
-    margin-left: 220px;
+    margin-left: 230px;
     padding: 20px;
 }
 
+/* CARDS */
 .cards {
     display: flex;
     gap: 20px;
@@ -63,25 +74,32 @@ body {
 }
 
 .card:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
+}
+
+/* CHART */
+canvas {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
 }
 </style>
 
 </head>
+
 <body>
 
 <!-- HEADER -->
-<div style="background:#020617; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
-    
+<div class="header">
     <div style="display:flex; align-items:center; gap:10px;">
         <img src="/static/logo.png" width="35">
         <b>Radiance ERP</b>
     </div>
 
     <div>👤 {{ session['user'] }}</div>
-
 </div>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
     <h2>📊 ERP</h2>
 
@@ -92,6 +110,7 @@ body {
     
     <a href="/invoice">Generate Invoice</a>
     <a href="/invoice_history">📜 Invoice History</a>
+
     {% if session['role'] == 'admin' %}
     <a href="/activity">Activity Log</a>
     {% endif %}
@@ -99,34 +118,49 @@ body {
     <a href="/logout">Logout</a>
 </div>
 
+<!-- MAIN CONTENT -->
 <div class="main">
 
 <h1>Welcome 👋</h1>
 
+<!-- STATS -->
 <div class="cards">
+
     <div class="card">
         <h3>Total Records</h3>
-        <p>{{ total }}</p>
+        <h2>{{ total }}</h2>
     </div>
 
     <div class="card">
-        <h3>System</h3>
-        <p>Running</p>
+        <h3>Total Sales</h3>
+        <h2>₹{{ total_sales }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Total Invoices</h3>
+        <h2>{{ total_invoices }}</h2>
     </div>
 
     <div class="card">
         <h3>User</h3>
-        <p>{{ session['user'] }}</p>
+        <h2>{{ session['user'] }}</h2>
     </div>
+
 </div>
 
-<canvas id="myChart" data-chart='{{ chart_data | tojson | safe }}'></canvas>
+<!-- CHART -->
+<canvas id="myChart"></canvas>
 
 <script>
-const canvas = document.getElementById('myChart');
-let data = JSON.parse('{{ chart_data | tojson | safe }}');
+let data = [];
 
-new Chart(canvas, {
+try {
+    data = JSON.parse('{{ chart_data | tojson | safe }}');
+} catch(e) {
+    data = [10, 20, 30]; // fallback
+}
+
+new Chart(document.getElementById('myChart'), {
     type: 'bar',
     data: {
         labels: data.map((_, i) => "Col " + (i+1)),
@@ -138,10 +172,12 @@ new Chart(canvas, {
 });
 </script>
 
+<!-- FOOTER -->
 <div style="text-align:center; margin-top:20px; color:gray;">
-    © ERP System | Developed by ashu 😎
+    © ERP System | Developed by Ashu 😎
 </div>
 
 </div>
+
 </body>
 </html>
